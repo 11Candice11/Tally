@@ -1,0 +1,85 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: invoicetracker_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: invoicetracker
+    # Port 5432 not exposed to the host — the api container reaches postgres
+    # over Docker's internal network. Uncomment only if you need a local DB client.
+    # ports:
+    #   - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./terraform/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d invoicetracker"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  redis:
+    image: redis:7-alpine
+    container_name: invoicetracker_redis
+    restart: unless-stopped
+    # Port 6379 not exposed to the host — the api container reaches redis
+    # over Docker's internal network. Uncomment only if you need a local Redis client.
+    # ports:
+    #   - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: invoicetracker_api
+    restart: unless-stopped
+    expose:
+      - "8080"
+    environment:
+      ASPNETCORE_ENVIRONMENT: Production
+      ConnectionStrings__Default: "Host=postgres;Port=5432;Database=invoicetracker;Username=postgres;Password=${POSTGRES_PASSWORD:-password}"
+      ConnectionStrings__Redis: "redis:6379"
+      Jwt__Key: ${JWT_KEY:?JWT_KEY env var must be set}
+      Jwt__Issuer: InvoiceTrackerAPI
+      Jwt__Audience: InvoiceTrackerUI
+      # Cors__AllowedOrigins removed — CORS is not needed since nginx proxies
+      # both frontend and API under the same origin (no cross-origin requests)
+      Email__Smtp: ${EMAIL_SMTP:-smtp.gmail.com}
+      Email__Port: ${EMAIL_PORT:-587}
+      Email__Username: ${EMAIL_USERNAME:-}
+      Email__Password: ${EMAIL_PASSWORD:-}
+      Email__From: ${EMAIL_FROM:-}
+      Email__FromName: ${EMAIL_FROM_NAME:-Tally}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: invoicetracker_frontend
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro
+    depends_on:
+      - api
+
+volumes:
+  postgres_data:
+  redis_data:
