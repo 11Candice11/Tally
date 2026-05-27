@@ -266,4 +266,111 @@ public class InvoiceServiceTests
         await Assert.ThrowsAsync<InvalidOperationException>(() =>
             svc.UpdateStatusAsync(created.Id, userId: 1, InvoiceStatus.Draft));
     }
+
+    [Fact]
+    public async Task UpdateStatus_CancelledInvoice_CannotBeChanged()
+    {
+        var dbName  = Guid.NewGuid().ToString();
+        var svc     = CreateService(dbName);
+        var created = await svc.CreateAsync(userId: 1, SampleCreateDto());
+        await svc.UpdateStatusAsync(created.Id, userId: 1, InvoiceStatus.Cancelled);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() =>
+            svc.UpdateStatusAsync(created.Id, userId: 1, InvoiceStatus.Sent));
+    }
+
+    [Theory]
+    [InlineData(InvoiceStatus.Sent)]
+    [InlineData(InvoiceStatus.Cancelled)]
+    public async Task UpdateStatus_DraftToAllowedStatuses_Succeeds(InvoiceStatus target)
+    {
+        var dbName  = Guid.NewGuid().ToString();
+        var svc     = CreateService(dbName);
+        var created = await svc.CreateAsync(userId: 1, SampleCreateDto());
+
+        var result = await svc.UpdateStatusAsync(created.Id, userId: 1, target);
+
+        Assert.NotNull(result);
+        Assert.Equal(target, result!.Status);
+    }
+
+    // ── GetSummary ────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetSummary_NoInvoices_ReturnsZeroSummary()
+    {
+        var svc = CreateService();
+
+        var result = await svc.GetSummaryAsync(userId: 1);
+
+        Assert.Equal(0m, result.TotalRevenue);
+        Assert.Equal(0m, result.Outstanding);
+        Assert.Equal(0,  result.OverdueCount);
+        Assert.Equal(0,  result.PendingCount);
+    }
+
+    [Fact]
+    public async Task GetSummary_WithPaidInvoice_IncludesInTotalRevenue()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var svc    = CreateService(dbName);
+        var inv    = await svc.CreateAsync(userId: 1, SampleCreateDto());
+        await svc.UpdateStatusAsync(inv.Id, userId: 1, InvoiceStatus.Sent);
+        await svc.UpdateStatusAsync(inv.Id, userId: 1, InvoiceStatus.Paid);
+
+        var result = await svc.GetSummaryAsync(userId: 1);
+
+        // 2 × 1000 × 1.15 = 2300
+        Assert.Equal(2300m, result.TotalRevenue);
+    }
+
+    // ── Admin methods ─────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task GetAllAdmin_ReturnsInvoicesAcrossAllUsers()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var svc    = CreateService(dbName);
+        await svc.CreateAsync(userId: 1, SampleCreateDto("User1 Client"));
+        await svc.CreateAsync(userId: 2, SampleCreateDto("User2 Client"));
+
+        var result = await svc.GetAllAdminAsync(new InvoiceFilterDto());
+
+        Assert.Equal(2, result.Total);
+    }
+
+    [Fact]
+    public async Task GetByIdAdmin_ReturnsInvoiceRegardlessOfOwner()
+    {
+        var dbName  = Guid.NewGuid().ToString();
+        var svc     = CreateService(dbName);
+        var created = await svc.CreateAsync(userId: 1, SampleCreateDto());
+
+        var result = await svc.GetByIdAdminAsync(created.Id);
+
+        Assert.NotNull(result);
+        Assert.Equal(created.Id, result!.Id);
+    }
+
+    [Fact]
+    public async Task DeleteAdmin_ExistingInvoice_ReturnsTrue()
+    {
+        var dbName  = Guid.NewGuid().ToString();
+        var svc     = CreateService(dbName);
+        var created = await svc.CreateAsync(userId: 1, SampleCreateDto());
+
+        var deleted = await svc.DeleteAdminAsync(created.Id);
+
+        Assert.True(deleted);
+    }
+
+    [Fact]
+    public async Task DeleteAdmin_NonExistentInvoice_ReturnsFalse()
+    {
+        var svc = CreateService();
+
+        var deleted = await svc.DeleteAdminAsync(id: 9999);
+
+        Assert.False(deleted);
+    }
 }

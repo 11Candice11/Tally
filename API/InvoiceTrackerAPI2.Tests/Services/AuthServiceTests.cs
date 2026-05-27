@@ -130,4 +130,89 @@ public class AuthServiceTests
                 NewPassword = "newpassword123"
             }));
     }
+
+    // ── Refresh ───────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Refresh_ValidToken_ReturnsNewTokenPair()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var svc    = CreateService(dbName);
+        var auth   = await svc.RegisterAsync(new RegisterDto { Name = "Dave", Email = "dave@test.com", Password = "password123" });
+
+        var result = await svc.RefreshAsync(auth.RefreshToken);
+
+        Assert.NotEmpty(result.Token);
+        Assert.NotEmpty(result.RefreshToken);
+        Assert.Equal("dave@test.com", result.User.Email);
+    }
+
+    [Fact]
+    public async Task Refresh_InvalidToken_ThrowsUnauthorizedAccessException()
+    {
+        var svc = CreateService();
+
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            svc.RefreshAsync("completely-invalid-token"));
+    }
+
+    [Fact]
+    public async Task Refresh_UsedToken_ThrowsUnauthorizedAccessException()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var svc    = CreateService(dbName);
+        var auth   = await svc.RegisterAsync(new RegisterDto { Name = "Eve", Email = "eve@test.com", Password = "password123" });
+
+        // Use the refresh token once — it should be revoked after
+        await svc.RefreshAsync(auth.RefreshToken);
+
+        // Second use of the same token must fail
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            svc.RefreshAsync(auth.RefreshToken));
+    }
+
+    // ── Logout ────────────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task Logout_ValidRefreshToken_RevokesToken()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var svc    = CreateService(dbName);
+        var auth   = await svc.RegisterAsync(new RegisterDto { Name = "Frank", Email = "frank@test.com", Password = "password123" });
+
+        // Logout should not throw
+        await svc.LogoutAsync(
+            jti:          Guid.NewGuid().ToString(),
+            jtiExpiry:    DateTime.UtcNow.AddMinutes(25),
+            refreshToken: auth.RefreshToken);
+
+        // Refresh token should now be revoked
+        await Assert.ThrowsAsync<UnauthorizedAccessException>(() =>
+            svc.RefreshAsync(auth.RefreshToken));
+    }
+
+    // ── CreateAdmin ───────────────────────────────────────────────────────────
+
+    [Fact]
+    public async Task CreateAdmin_ValidDto_ReturnsTokenWithAdminRole()
+    {
+        var svc    = CreateService();
+        var dto    = new RegisterDto { Name = "Admin User", Email = "admin@test.com", Password = "adminpass123" };
+
+        var result = await svc.CreateAdminAsync(dto);
+
+        Assert.NotEmpty(result.Token);
+        Assert.Equal("admin@test.com", result.User.Email);
+    }
+
+    [Fact]
+    public async Task CreateAdmin_DuplicateEmail_ThrowsInvalidOperationException()
+    {
+        var dbName = Guid.NewGuid().ToString();
+        var svc    = CreateService(dbName);
+        var dto    = new RegisterDto { Name = "Admin", Email = "admin@test.com", Password = "adminpass123" };
+        await svc.CreateAdminAsync(dto);
+
+        await Assert.ThrowsAsync<InvalidOperationException>(() => svc.CreateAdminAsync(dto));
+    }
 }

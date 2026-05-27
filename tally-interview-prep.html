@@ -1,0 +1,577 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tally — SE3 Interview Prep</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.65;
+    color: #1a1a2e;
+    background: #fff;
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 40px 48px;
+  }
+
+  /* ── Cover ── */
+  .cover {
+    text-align: center;
+    padding: 60px 0 48px;
+    border-bottom: 3px solid #4f46e5;
+    margin-bottom: 48px;
+  }
+  .cover .tag {
+    display: inline-block;
+    background: #ede9fe;
+    color: #4f46e5;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .cover h1 {
+    font-size: 38px;
+    font-weight: 800;
+    color: #1a1a2e;
+    line-height: 1.15;
+  }
+  .cover h1 span { color: #4f46e5; }
+  .cover p {
+    margin-top: 12px;
+    font-size: 15px;
+    color: #6b7280;
+  }
+
+  /* ── Sections ── */
+  h2 {
+    font-size: 20px;
+    font-weight: 700;
+    color: #4f46e5;
+    margin: 40px 0 14px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e5e7eb;
+  }
+  h3 {
+    font-size: 15px;
+    font-weight: 700;
+    color: #1a1a2e;
+    margin: 24px 0 8px;
+  }
+  p { margin-bottom: 10px; }
+  ul, ol { margin: 8px 0 10px 20px; }
+  li { margin-bottom: 4px; }
+  strong { color: #1a1a2e; }
+
+  /* ── Pitch box ── */
+  .pitch {
+    background: #f0fdf4;
+    border-left: 4px solid #22c55e;
+    border-radius: 6px;
+    padding: 16px 20px;
+    margin: 16px 0 24px;
+    font-size: 15px;
+    font-style: italic;
+    color: #166534;
+  }
+
+  /* ── Tech table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 24px;
+    font-size: 13px;
+  }
+  thead { background: #4f46e5; color: #fff; }
+  th { padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* ── Code blocks ── */
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+  }
+  code {
+    background: #ede9fe;
+    color: #4f46e5;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── Q&A cards ── */
+  .qa-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
+    margin: 18px 0;
+    overflow: hidden;
+    page-break-inside: avoid;
+  }
+  .qa-card .question {
+    background: #4f46e5;
+    color: #fff;
+    padding: 12px 18px;
+    font-weight: 700;
+    font-size: 14px;
+  }
+  .qa-card .question .qnum {
+    display: inline-block;
+    background: #fff;
+    color: #4f46e5;
+    border-radius: 50%;
+    width: 22px;
+    height: 22px;
+    line-height: 22px;
+    text-align: center;
+    font-size: 12px;
+    font-weight: 800;
+    margin-right: 10px;
+  }
+  .qa-card .answer {
+    padding: 14px 18px;
+    font-size: 13.5px;
+    background: #fff;
+    color: #374151;
+  }
+  .qa-card .answer p { margin-bottom: 8px; }
+  .qa-card .answer p:last-child { margin-bottom: 0; }
+
+  /* ── Architecture diagram ── */
+  .diagram {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    margin: 12px 0 20px;
+    white-space: pre;
+  }
+
+  /* ── Key numbers ── */
+  .numbers-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin: 14px 0 24px;
+  }
+  .number-card {
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    border-radius: 8px;
+    padding: 12px 14px;
+    text-align: center;
+  }
+  .number-card .val {
+    font-size: 20px;
+    font-weight: 800;
+    color: #4f46e5;
+    display: block;
+  }
+  .number-card .lbl {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+  }
+
+  /* ── Pattern cards ── */
+  .pattern {
+    background: #fafafa;
+    border: 1px solid #e5e7eb;
+    border-left: 4px solid #4f46e5;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 10px 0;
+    page-break-inside: avoid;
+  }
+  .pattern h4 {
+    font-size: 13.5px;
+    font-weight: 700;
+    color: #4f46e5;
+    margin-bottom: 4px;
+  }
+  .pattern p { font-size: 13px; color: #374151; margin: 0; }
+
+  /* ── Tips box ── */
+  .tip {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 16px 0;
+    font-size: 13px;
+    color: #78350f;
+  }
+  .tip strong { color: #92400e; }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 20px 30px; font-size: 12px; }
+    .cover { padding: 30px 0 30px; }
+    .cover h1 { font-size: 28px; }
+    h2 { font-size: 16px; margin-top: 28px; }
+    pre, .diagram { font-size: 10.5px; }
+    .numbers-grid { grid-template-columns: repeat(3, 1fr); }
+    .qa-card, .pattern { page-break-inside: avoid; }
+    h2 { page-break-after: avoid; }
+  }
+</style>
+</head>
+<body>
+
+<!-- ════════════════════════════════════════════════════════════════ COVER -->
+<div class="cover">
+  <span class="tag">SE3 Interview Prep</span>
+  <h1><span>Tally</span> Invoice Tracker</h1>
+  <p>Full-stack project walkthrough · Architecture · Q&amp;A · Key numbers</p>
+  <p style="margin-top:6px; font-size:12px; color:#9ca3af;">Vue 3 · ASP.NET Core 9 · PostgreSQL · Redis · Docker · AWS · Terraform</p>
+</div>
+
+
+<!-- ════════════════════════════════════════════════════════════ 1. PITCH -->
+<h2>1. The One-Sentence Pitch</h2>
+
+<div class="pitch">
+  "Tally is a full-stack invoice management SaaS — users create, send, and track invoices for their clients, and the system automatically marks unpaid invoices overdue each night."
+</div>
+
+<p>Use this as your opening line every time. It tells the panel: what it does, who uses it, and that there's a non-trivial background process. Everything else is detail you layer on top.</p>
+
+
+<!-- ════════════════════════════════════════════════ 2. PANEL WALKTHROUGH -->
+<h2>2. Panel Walkthrough Script</h2>
+
+<p>Tell this as a flowing story, not a bullet list. Aim for about 3 minutes.</p>
+
+<h3>Opening</h3>
+<p><em>"The application has three main layers — a Vue 3 SPA on the frontend, an ASP.NET Core 9 REST API as the backend, and PostgreSQL as the database. Redis is also in the stack for token revocation. Everything is containerised with Docker Compose and deployed on an AWS EC2 instance via Terraform."</em></p>
+
+<h3>Authentication</h3>
+<p><em>"A user registers and receives a short-lived JWT access token — 25 minutes — plus a long-lived refresh token — 7 days. The frontend silently refreshes the access token 60 seconds before it expires, so the session feels seamless. When they log out, the current JWT's unique ID — the jti claim — is placed on a Redis blacklist with a TTL equal to the token's remaining lifetime, so it can't be replayed even before it expires."</em></p>
+
+<h3>Backend Architecture</h3>
+<p><em>"Inside the API I followed a layered architecture: Controllers handle HTTP concerns, Services hold business logic, and Repositories handle data access — all wired up via .NET's built-in dependency injection. Every layer talks through interfaces, which makes unit testing straightforward without spinning up a real database."</em></p>
+
+<h3>Interesting Design Problem</h3>
+<p><em>"One interesting design problem was invoice number generation. If two requests come in simultaneously you can't let them both read the same counter and increment separately — you'd get duplicate invoice numbers. I solved it with a PostgreSQL INSERT ... ON CONFLICT DO UPDATE ... RETURNING — a single atomic upsert that increments and returns the new counter in one round trip, with no race condition and no retry logic needed."</em></p>
+
+<h3>State Machine</h3>
+<p><em>"Invoice status follows a state machine — a Draft can be Sent or Cancelled, a Sent invoice can go to Paid, Overdue, or Cancelled, but you can never go backwards. A background service runs nightly at midnight UTC and bulk-updates any Sent invoices past their due date to Overdue."</em></p>
+
+<h3>Infrastructure</h3>
+<p><em>"On the infrastructure side, Terraform provisions an EC2 instance, attaches an Elastic IP for a stable DNS target, and creates an AWS Secrets Manager secret. The EC2 user-data script installs Docker and writes a fetch-secrets script that pulls credentials at deploy time — so secrets never live in the repo or in Terraform state. Nginx sits in front of everything — it terminates TLS with a Let's Encrypt certificate, serves the Vue static files, and reverse-proxies /api/ requests to the backend container. Because both the UI and API are on the same origin, there's no CORS configuration needed at all."</em></p>
+
+
+<!-- ══════════════════════════════════════════════════ 3. TECH STACK -->
+<h2>3. Tech Stack &amp; Why Each Choice</h2>
+
+<table>
+  <thead>
+    <tr><th>Layer</th><th>Technology</th><th>Why this choice</th></tr>
+  </thead>
+  <tbody>
+    <tr><td>Backend</td><td>ASP.NET Core 9 (C#)</td><td>Strongly typed, high performance, excellent DI container, great ecosystem for enterprise CRUD APIs</td></tr>
+    <tr><td>ORM</td><td>Entity Framework Core</td><td>Code-first migrations keep the DB schema in sync with the code, LINQ queries are type-safe, avoids raw SQL for most operations</td></tr>
+    <tr><td>Database</td><td>PostgreSQL 16</td><td>ACID compliant, supports atomic ON CONFLICT DO UPDATE (needed for invoice counters), better concurrency than SQLite</td></tr>
+    <tr><td>Cache / Blacklist</td><td>Redis 7</td><td>In-memory, key TTL auto-expiry (no cleanup job needed), perfect for short-lived revocation records</td></tr>
+    <tr><td>Frontend</td><td>Vue 3 + TypeScript</td><td>Composition API is lightweight and testable, reactive primitives map cleanly onto CRUD state</td></tr>
+    <tr><td>State Management</td><td>Pinia</td><td>Official Vue 3 store, simpler than Vuex, fully TypeScript-typed, no boilerplate mutations layer</td></tr>
+    <tr><td>Build Tool</td><td>Vite</td><td>Extremely fast HMR, native ESM, code-splits routes automatically so each page loads only what it needs</td></tr>
+    <tr><td>HTTP Client</td><td>Axios</td><td>Interceptors for injecting the auth header on every request, consistent error shape</td></tr>
+    <tr><td>Charts</td><td>Chart.js + vue-chartjs</td><td>Lightweight, no heavy dependencies, good enough for dashboard bar/line charts</td></tr>
+    <tr><td>FE Testing</td><td>Vitest</td><td>Shares Vite config, fast, compatible with Vue Test Utils and Pinia testing helpers</td></tr>
+    <tr><td>BE Testing</td><td>xUnit</td><td>Standard .NET test framework, EF InMemory for repository tests</td></tr>
+    <tr><td>Reverse Proxy</td><td>Nginx</td><td>Serves static files, proxies API, handles TLS, applies rate limiting and security headers</td></tr>
+    <tr><td>Containers</td><td>Docker + Compose</td><td>Reproducible environments, all four services start with one command, internal networking keeps ports off the host</td></tr>
+    <tr><td>IaC</td><td>Terraform</td><td>Declarative, reproducible cloud infra, drift detection via state file</td></tr>
+    <tr><td>Secrets</td><td>AWS Secrets Manager</td><td>Credentials never in the repo, rotatable without redeploying, IAM least-privilege access</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ════════════════════════════════════════════════ 4. ARCHITECTURE -->
+<h2>4. Architecture Patterns</h2>
+
+<div class="pattern">
+  <h4>Layered / Clean Architecture</h4>
+  <p>Controller → Service → Repository → Database. Each layer only talks to the one below it via an interface. Swapping the database or faking a repository in tests requires no changes to the service layer.</p>
+</div>
+
+<div class="pattern">
+  <h4>Repository Pattern</h4>
+  <p>IInvoiceRepository, IUserRepository, IClientRepository. Services never touch DbContext directly. Benefit: tests inject fakes without a real DB. Trade-off: extra boilerplate on top of EF Core, which is already a repository internally.</p>
+</div>
+
+<div class="pattern">
+  <h4>DTO + AutoMapper</h4>
+  <p>Domain models (Invoice, User) never cross the HTTP boundary. DTOs are the API contract. AutoMapper converts between them. Changing an internal field name doesn't break the API response shape.</p>
+</div>
+
+<div class="pattern">
+  <h4>State Machine (Invoice Status)</h4>
+  <p>The AllowedTransitions dictionary defines which status changes are legal. Any invalid transition throws InvalidOperationException → controller catches it → returns HTTP 422. Terminal states (Paid, Cancelled) have empty allowed sets.</p>
+</div>
+
+<pre>Draft     → [Sent, Cancelled]
+Sent      → [Paid, Overdue, Cancelled]
+Overdue   → [Paid, Cancelled]
+Paid      → []          ← terminal
+Cancelled → []          ← terminal</pre>
+
+<div class="pattern">
+  <h4>Background Service (Hosted Service)</h4>
+  <p>OverdueInvoiceJob extends BackgroundService. It waits until midnight UTC, then issues a single bulk EF Core ExecuteUpdateAsync — one SQL UPDATE for all affected rows, no per-invoice round trip. No external scheduler (Hangfire, Quartz) needed.</p>
+</div>
+
+<div class="pattern">
+  <h4>Token Revocation via Redis Blacklist</h4>
+  <p>JWTs are stateless — you can't "delete" them server-side. On logout, the JWT's jti claim is written to Redis with a TTL equal to the token's remaining lifetime. OnTokenValidated checks Redis on every request. When the TTL expires, Redis removes the key automatically.</p>
+</div>
+
+<div class="pattern">
+  <h4>Atomic Counter via PostgreSQL Upsert</h4>
+  <p>No SELECT + UPDATE two-step (race condition). One atomic INSERT ... ON CONFLICT DO UPDATE ... RETURNING. PostgreSQL serialises the conflict resolution — even under concurrent requests, no duplicates, no gaps, no retry logic.</p>
+</div>
+
+<pre>INSERT INTO "InvoiceCounters" ("UserId", "YearMonth", "Counter")
+VALUES ($1, $2, 1)
+ON CONFLICT ("UserId", "YearMonth") DO UPDATE
+    SET "Counter" = "InvoiceCounters"."Counter" + 1
+RETURNING "Counter"</pre>
+
+<div class="pattern">
+  <h4>Single-Origin Deployment (no CORS)</h4>
+  <p>Nginx serves the Vue SPA at / and proxies /api/* to the backend — both from the same domain (tally.inkcat.net). The browser never makes a cross-origin request, so CORS headers are completely unnecessary and intentionally removed.</p>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════ 5. DIAGRAM -->
+<h2>5. Architecture Diagram (Whiteboard Version)</h2>
+
+<div class="diagram">Browser
+  │
+  │ HTTPS 443
+  ▼
+┌──────────────────────────────────────────┐
+│                 nginx                    │
+│  • TLS termination (Let's Encrypt)       │
+│  • Security headers (HSTS, CSP, etc.)   │
+│  • Rate limiting (auth: 5 req/min)       │
+│  • Serves /  → Vue SPA static files     │
+│  • Proxies /api/ → api:8080             │
+└───────────────────┬──────────────────────┘
+                    │  Docker internal network
+        ┌───────────┼───────────────────┐
+        ▼           ▼                   ▼
+  ┌──────────┐ ┌──────────┐     ┌────────────┐
+  │   API    │ │ Postgres │     │   Redis    │
+  │  :8080   │ │  :5432   │     │   :6379    │
+  │          │ │          │     │            │
+  │ Controllers│(not exposed│   │(not exposed│
+  │ Services │  to host)  │     │ to host)   │
+  │ Repos    │            │     │            │
+  │ BG Job   │            │     │            │
+  └──────────┘ └──────────┘     └────────────┘
+
+AWS: EC2 t3.small (eu-north-1) + Elastic IP
+     IAM Role → Secrets Manager (read-only)
+     Terraform-provisioned infrastructure</div>
+
+
+<!-- ══════════════════════════════════════════════════ 6. SECURITY -->
+<h2>6. Security Layers</h2>
+
+<table>
+  <thead><tr><th>Layer</th><th>What it does</th></tr></thead>
+  <tbody>
+    <tr><td>nginx</td><td>TLS 1.2+, HSTS, CSP, X-Frame-Options DENY, Referrer-Policy, rate limiting on auth (5/min) and API (30/s)</td></tr>
+    <tr><td>JWT</td><td>25-min access tokens signed with HMAC-SHA256, jti claim for revocation</td></tr>
+    <tr><td>Redis blacklist</td><td>Revoked jtis stored with TTL — prevents replay of logged-out tokens</td></tr>
+    <tr><td>Refresh tokens</td><td>SHA-256 hashed before DB storage — breach doesn't expose plaintext tokens</td></tr>
+    <tr><td>Passwords</td><td>BCrypt hashed — timing-safe, includes salt, work factor</td></tr>
+    <tr><td>Input sanitizer</td><td>Strips HTML tags on all user inputs before persisting — defence against stored XSS</td></tr>
+    <tr><td>Request size limit</td><td>1 MB cap on request body — prevents large-payload DoS</td></tr>
+    <tr><td>Global error handler</td><td>Returns generic 500 JSON — no stack traces exposed to clients</td></tr>
+    <tr><td>Docker user</td><td>API runs as non-root appuser inside the container</td></tr>
+    <tr><td>IAM</td><td>EC2 role has only secretsmanager:GetSecretValue on the one specific secret (least privilege)</td></tr>
+    <tr><td>Ownership checks</td><td>Every invoice query filters by userId — you can only see and modify your own data</td></tr>
+    <tr><td>Role-based auth</td><td>Admin endpoints require Authorize(Roles = "Admin") — regular users cannot access them</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ════════════════════════════════════════════════ 7. KEY NUMBERS -->
+<h2>7. Key Numbers to Know</h2>
+
+<div class="numbers-grid">
+  <div class="number-card"><span class="val">25 min</span><span class="lbl">Access Token Lifetime</span></div>
+  <div class="number-card"><span class="val">7 days</span><span class="lbl">Refresh Token Lifetime</span></div>
+  <div class="number-card"><span class="val">5/min</span><span class="lbl">Auth Rate Limit (per IP)</span></div>
+  <div class="number-card"><span class="val">30/sec</span><span class="lbl">API Rate Limit (per IP)</span></div>
+  <div class="number-card"><span class="val">30 sec</span><span class="lbl">Summary Cache TTL</span></div>
+  <div class="number-card"><span class="val">1 MB</span><span class="lbl">Max Request Body</span></div>
+  <div class="number-card"><span class="val">60 sec</span><span class="lbl">Refresh Triggered Before Expiry</span></div>
+  <div class="number-card"><span class="val">00:00 UTC</span><span class="lbl">Overdue Job Runs At</span></div>
+  <div class="number-card"><span class="val">.NET 9</span><span class="lbl">Backend Runtime</span></div>
+  <div class="number-card"><span class="val">PG 16</span><span class="lbl">PostgreSQL Version</span></div>
+  <div class="number-card"><span class="val">t3.small</span><span class="lbl">EC2 Instance Type</span></div>
+  <div class="number-card"><span class="val">eu-north-1</span><span class="lbl">AWS Region (Stockholm)</span></div>
+</div>
+
+
+<!-- ═══════════════════════════════════════════════════ 8. Q&A -->
+<h2>8. Interview Q&amp;A</h2>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">1</span>Walk me through the authentication system.</div>
+  <div class="answer">
+    <p>Authentication uses a two-token pattern. The user logs in and gets a short-lived JWT access token — 25 minutes — and a long-lived refresh token — 7 days. The access token is a signed JWT containing the user's ID, email, role, and a unique <code>jti</code> claim. The refresh token is a cryptographically random 64-byte value — only its SHA-256 hash is stored in the database, so a database breach doesn't expose the tokens themselves.</p>
+    <p>The frontend stores both in localStorage and schedules a silent refresh 60 seconds before the access token expires. When the user logs out, two things happen: the current JWT's <code>jti</code> is written to Redis with a TTL equal to its remaining lifetime, and the refresh token is revoked in the database. Every authenticated request's <code>OnTokenValidated</code> event checks Redis, so a token can't be replayed after logout even if it hasn't technically expired yet.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">2</span>Why did you use the Repository pattern? Isn't it redundant over EF Core?</div>
+  <div class="answer">
+    <p>That's a fair critique — EF Core's DbContext is already a Unit of Work and the DbSet is already a repository. The reason I added it anyway was testability. By coding against <code>IInvoiceRepository</code> instead of <code>AppDbContext</code>, the service tests can inject a simple fake or in-memory implementation without spinning up a real database.</p>
+    <p>In the test project you can see <code>FakeInvoiceNumberAllocator</code> — same principle. The trade-off is a bit more boilerplate, but for a project with real test coverage I think it's worth it. If I were building a much simpler CRUD app with no tests, I'd probably skip the repositories and use DbContext directly in the services.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">3</span>How does invoice number generation work and why did you design it that way?</div>
+  <div class="answer">
+    <p>Invoice numbers follow a per-user monthly format: <code>INV-202605-0001</code>. The naive approach — read the counter, increment it, write it back — creates a race condition. Two simultaneous requests could both read the same counter value and produce duplicate numbers.</p>
+    <p>Instead I use a single PostgreSQL <code>INSERT ... ON CONFLICT DO UPDATE ... RETURNING</code>. If no counter row exists for that user and month it inserts one with Counter = 1. If one already exists it atomically increments it. The <code>RETURNING</code> clause gives me the new value in the same round trip. Because PostgreSQL serialises the conflict resolution internally, there's no race condition and no retry logic needed — it just works under any level of concurrent load.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">4</span>Explain the invoice status state machine.</div>
+  <div class="answer">
+    <p>An invoice has five states: Draft, Sent, Overdue, Paid, and Cancelled. Not all transitions are valid. I encoded the allowed transitions as a dictionary in InvoiceService: Draft → [Sent, Cancelled], Sent → [Paid, Overdue, Cancelled], Overdue → [Paid, Cancelled], and the terminal states Paid and Cancelled have empty allowed sets.</p>
+    <p>If you attempt an invalid transition the service throws an <code>InvalidOperationException</code> which the controller catches and returns as HTTP 422 Unprocessable Entity with a human-readable message. The nightly background job uses <code>ExecuteUpdateAsync</code> to bulk-transition any Sent invoices past their due date directly in the database in a single SQL UPDATE — no round-trip per row.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">5</span>How is the app secured?</div>
+  <div class="answer">
+    <p>Security is layered. At the network level nginx enforces TLS 1.2+, sets HSTS, and rate-limits the auth endpoints to 5 requests per minute per IP to slow brute-force attacks. The API endpoints are protected with JWT bearer auth and role-based authorization — admin endpoints require the Admin role.</p>
+    <p>All user inputs go through a Sanitizer class that strips HTML tags using a compiled regex before persisting — defence against stored XSS. Passwords are BCrypt hashed. Reset tokens and refresh tokens are stored as SHA-256 hashes. The API enforces a 1 MB request body limit to prevent large-payload DoS. The global exception handler returns a generic 500 message — no stack traces ever reach the client. In Docker the API runs as a non-root user. The AWS IAM role grants only <code>secretsmanager:GetSecretValue</code> on the one specific secret — least privilege throughout.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">6</span>Why Vue 3 + Pinia instead of React + Redux?</div>
+  <div class="answer">
+    <p>Vue 3's Composition API feels very natural for this kind of CRUD application. <code>ref</code> and <code>computed</code> map cleanly onto reactive data and derived values. Pinia is the official Vue 3 state management solution — it's much simpler than Vuex, fully TypeScript-typed out of the box, and stores are just functions that return reactive state and actions. There's no boilerplate mutations layer.</p>
+    <p>The honest trade-off is that React has a larger ecosystem and more job-market demand. But for a self-contained project Vue gave me a faster, more pleasant development experience, and the Composition API composables are just as testable as React hooks.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">7</span>What is the purpose of Redis in this project?</div>
+  <div class="answer">
+    <p>Redis serves two purposes. First, it's the token revocation store — when a user logs out, the JWT's <code>jti</code> is stored as a Redis key with a TTL equal to the token's remaining lifetime. When the TTL expires Redis automatically deletes the key, so there's no cleanup job needed.</p>
+    <p>Second, the output cache for the summary endpoint uses in-memory caching — the summary aggregates across all invoices and is expensive to recompute on every request. It's cached for 30 seconds per user, with the cache key varied by the Authorization header so users never see each other's data.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">8</span>Explain your Terraform and deployment approach.</div>
+  <div class="answer">
+    <p>Terraform provisions the AWS infrastructure: an EC2 t3.small running Ubuntu 24.04, a security group allowing ports 22/80/443, an Elastic IP for a stable DNS A-record, and an IAM role attached to the instance with permission only to call <code>GetSecretValue</code> on a specific Secrets Manager secret.</p>
+    <p>The EC2 user-data script installs Docker on first boot and writes a <code>fetch-secrets.sh</code> script. On every deploy, that script calls the Secrets Manager API, gets the JSON secret, and uses <code>jq</code> to write it as a <code>.env</code> file for Docker Compose to read. Credentials are never in the repository, never in Terraform state — they live only in Secrets Manager and briefly in memory during deploy.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">9</span>How does the frontend handle token expiry gracefully?</div>
+  <div class="answer">
+    <p>When the frontend receives a login or refresh response, it decodes the JWT payload — the middle Base64 segment — to read the <code>exp</code> claim and stores the expiry timestamp in localStorage. It then schedules a <code>setTimeout</code> to fire 60 seconds before expiry. That timer calls a silent refresh — it hits <code>/api/auth/refresh</code> with the stored refresh token, gets a new access token back, updates the store and localStorage, and schedules the next refresh cycle.</p>
+    <p>The user never sees a logout or authentication error unless the refresh token itself has expired or been revoked, in which case the store clears the session and redirects to <code>/login</code>.</p>
+  </div>
+</div>
+
+<div class="qa-card">
+  <div class="question"><span class="qnum">10</span>What would you improve or do differently?</div>
+  <div class="answer">
+    <p><strong>HttpOnly cookies for refresh tokens.</strong> Currently the refresh token is stored in localStorage, which is accessible to JavaScript and therefore vulnerable to XSS. A better approach would be an HttpOnly cookie — JavaScript can't read it at all. There's actually a TODO comment in AuthService for this.</p>
+    <p><strong>Password reset email.</strong> The reset token is generated and stored, but the email sending isn't wired up yet — another TODO in the code.</p>
+    <p><strong>Migration job, not startup migration.</strong> Running <code>Database.Migrate()</code> on startup can cause a race condition in a multi-instance deployment. A separate pre-deploy migration job would be safer.</p>
+    <p><strong>Async messaging.</strong> There's a TODO for RabbitMQ for async invoice processing. At high volume you'd want invoice creation to publish an event rather than doing everything synchronously in the request pipeline.</p>
+  </div>
+</div>
+
+
+<!-- ══════════════════════════════════════════════ 9. DB SCHEMA -->
+<h2>9. Database Schema Summary</h2>
+
+<table>
+  <thead><tr><th>Table</th><th>Key Columns</th><th>Notes</th></tr></thead>
+  <tbody>
+    <tr><td>Users</td><td>Id, Name, Email (unique), PasswordHash, Role, PasswordResetToken</td><td>Role is "User" or "Admin". Reset token stored as SHA-256 hash.</td></tr>
+    <tr><td>RefreshTokens</td><td>Id, UserId (FK), TokenHash (unique), ExpiresAt, IsRevoked</td><td>Only hash stored, not plaintext. Cascade delete on user delete.</td></tr>
+    <tr><td>Clients</td><td>Id, UserId (FK), Name, Email, Phone, Address</td><td>Composite unique index on (UserId, Email).</td></tr>
+    <tr><td>Invoices</td><td>Id, InvoiceNumber (unique), ClientName, ClientEmail, Status, IssueDate, DueDate, VatRate, Discount, LateFee, UserId, ClientId</td><td>Status stored as string. Indexes on UserId, (UserId, IssueDate), (UserId, Status).</td></tr>
+    <tr><td>LineItems</td><td>Id, InvoiceId (FK), Description, Qty, UnitPrice</td><td>Cascade delete. Eager-loaded with every invoice fetch.</td></tr>
+    <tr><td>InvoiceCounters</td><td>UserId + YearMonth (composite PK), Counter</td><td>Used for atomic sequential invoice number generation per user per month.</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ═══════════════════════════════════════════ 10. TIPS -->
+<h2>10. Tips for the Day</h2>
+
+<div class="tip">
+  <strong>Draw the diagram early.</strong> If there's a whiteboard, sketch the 4-container stack (nginx, api, postgres, redis) in the first minute. It gives the panel a shared mental model and makes all your other answers easier to follow.
+</div>
+
+<div class="tip">
+  <strong>Name the trade-offs.</strong> SE3 panels want to see engineering judgment, not just "I used X because it's good." For every choice, have one sentence about what you gave up — e.g., "Pinia is simpler but React has a larger ecosystem."
+</div>
+
+<div class="tip">
+  <strong>The TODO comments are honest and good.</strong> HttpOnly cookies for refresh tokens, the unwired email reset, the startup migration race — bring these up yourself in Q10. It shows self-awareness and that you understand the gap between a working prototype and production-ready code.
+</div>
+
+<div class="tip">
+  <strong>On the atomic counter:</strong> The key insight is "one round trip, no retry, no gap." Practice saying those three things smoothly — they signal you actually understand why the naive approach fails under concurrency.
+</div>
+
+<div class="tip">
+  <strong>On Redis:</strong> The TTL auto-expiry is the elegant part — "when the token would have expired anyway, the revocation key disappears too — zero cleanup work." That detail impresses.
+</div>
+
+<div class="tip">
+  <strong>On CORS:</strong> Most candidates add CORS without thinking. Being able to explain why you deliberately removed it ("same-origin because nginx proxies both under one domain") shows architectural thinking.
+</div>
+
+<br/>
+<p style="text-align:center; color:#9ca3af; font-size:12px; margin-top:40px; border-top:1px solid #e5e7eb; padding-top:16px;">
+  Tally Invoice Tracker &nbsp;·&nbsp; SE3 Interview Prep &nbsp;·&nbsp; tally.inkcat.net
+</p>
+
+</body>
+</html>
