@@ -9,6 +9,6 @@ public class FakeInvoiceNumberAllocator : IInvoiceNumberAllocator
     public Task<string> NextAsync(int userId)
     {
         var n = Interlocked.Increment(ref _counter);
-        return Task.FromResult($"INV-{DateTime.UtcNow:yyyyMM}-{n:D4}");
+        return Task.FromResult($"INV-{DateTime.UtcNow:yyyyMM}-{userId}-{n:D4}");
     }
 }

@@ -1,0 +1,1294 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tally — SE3 Tech Concepts Deep Dive</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    font-size: 14px;
+    line-height: 1.7;
+    color: #1a1a2e;
+    background: #fff;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 48px;
+  }
+
+  /* ── TOC ── */
+  .toc {
+    background: #f5f3ff;
+    border: 1px solid #ddd6fe;
+    border-radius: 10px;
+    padding: 24px 28px;
+    margin: 32px 0 48px;
+    column-count: 2;
+    column-gap: 32px;
+  }
+  .toc h2 { color: #4f46e5; font-size: 14px; text-transform: uppercase; letter-spacing: .08em; margin-bottom: 12px; column-span: all; border: none; padding: 0; margin-top: 0; }
+  .toc ol { margin-left: 18px; }
+  .toc li { font-size: 12.5px; margin-bottom: 3px; }
+  .toc a { color: #4f46e5; text-decoration: none; }
+  .toc a:hover { text-decoration: underline; }
+
+  /* ── Cover ── */
+  .cover {
+    text-align: center;
+    padding: 60px 0 48px;
+    border-bottom: 3px solid #4f46e5;
+    margin-bottom: 48px;
+  }
+  .cover .tag {
+    display: inline-block;
+    background: #ede9fe;
+    color: #4f46e5;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    padding: 4px 12px;
+    border-radius: 20px;
+    margin-bottom: 16px;
+  }
+  .cover h1 { font-size: 36px; font-weight: 800; color: #1a1a2e; line-height: 1.15; }
+  .cover h1 span { color: #4f46e5; }
+  .cover p { margin-top: 12px; font-size: 14px; color: #6b7280; }
+
+  /* ── Section headers ── */
+  h2 {
+    font-size: 19px;
+    font-weight: 700;
+    color: #4f46e5;
+    margin: 52px 0 14px;
+    padding-bottom: 8px;
+    border-bottom: 2px solid #e5e7eb;
+    scroll-margin-top: 20px;
+  }
+  h3 { font-size: 14.5px; font-weight: 700; color: #1a1a2e; margin: 22px 0 8px; }
+  h4 { font-size: 13px; font-weight: 700; color: #4f46e5; margin: 16px 0 4px; }
+  p { margin-bottom: 10px; }
+  ul, ol { margin: 8px 0 10px 22px; }
+  li { margin-bottom: 5px; }
+  strong { color: #1a1a2e; }
+
+  /* ── Pros/Cons grids ── */
+  .pc-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin: 14px 0 20px;
+  }
+  .pros {
+    background: #f0fdf4;
+    border: 1px solid #bbf7d0;
+    border-top: 3px solid #22c55e;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .cons {
+    background: #fff1f2;
+    border: 1px solid #fecdd3;
+    border-top: 3px solid #f43f5e;
+    border-radius: 8px;
+    padding: 14px 16px;
+  }
+  .pros h4, .cons h4 { margin-top: 0; color: inherit; font-size: 12px; text-transform: uppercase; letter-spacing: .07em; margin-bottom: 8px; }
+  .pros h4 { color: #15803d; }
+  .cons h4 { color: #be123c; }
+  .pros li, .cons li { font-size: 13px; }
+
+  /* ── Callout boxes ── */
+  .note {
+    background: #eff6ff;
+    border-left: 4px solid #3b82f6;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: #1e40af;
+  }
+  .warn {
+    background: #fffbeb;
+    border-left: 4px solid #f59e0b;
+    border-radius: 6px;
+    padding: 12px 16px;
+    margin: 14px 0;
+    font-size: 13px;
+    color: #78350f;
+  }
+  .project-box {
+    background: #faf5ff;
+    border-left: 4px solid #a855f7;
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin: 16px 0 24px;
+    font-size: 13.5px;
+    color: #581c87;
+  }
+  .project-box strong { color: #581c87; }
+
+  /* ── Code ── */
+  pre {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 8px;
+    padding: 18px 20px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12.5px;
+    line-height: 1.6;
+    overflow-x: auto;
+    margin: 12px 0 20px;
+  }
+  code {
+    background: #ede9fe;
+    color: #4f46e5;
+    border-radius: 4px;
+    padding: 2px 6px;
+    font-family: 'Cascadia Code', 'Fira Code', monospace;
+    font-size: 12.5px;
+  }
+  pre code { background: none; color: inherit; padding: 0; font-size: inherit; }
+
+  /* ── Comparison table ── */
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 12px 0 22px;
+    font-size: 13px;
+  }
+  thead { background: #4f46e5; color: #fff; }
+  th { padding: 10px 12px; text-align: left; font-weight: 600; }
+  td { padding: 8px 12px; border-bottom: 1px solid #e5e7eb; vertical-align: top; }
+  tr:nth-child(even) td { background: #f9fafb; }
+
+  /* ── Diagram ── */
+  .diagram {
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border-radius: 8px;
+    padding: 20px 24px;
+    font-family: 'Cascadia Code', 'Fira Code', 'Consolas', monospace;
+    font-size: 12px;
+    line-height: 1.75;
+    margin: 12px 0 20px;
+    white-space: pre;
+  }
+
+  /* ── Print ── */
+  @media print {
+    body { padding: 20px 30px; font-size: 12px; }
+    .cover { padding: 30px 0; }
+    h2 { font-size: 16px; margin-top: 32px; page-break-after: avoid; }
+    pre, .diagram { font-size: 10.5px; }
+    .pc-grid { grid-template-columns: 1fr 1fr; }
+    .toc { column-count: 2; }
+  }
+</style>
+</head>
+<body>
+
+<!-- COVER -->
+<div class="cover">
+  <span class="tag">SE3 Fullstack — Deep Technical Reference</span>
+  <h1><span>Tally</span> — Tech Concepts</h1>
+  <p>Architecture decisions · Language runtimes · Infrastructure · Security · Tooling</p>
+  <p style="margin-top:6px;font-size:12px;color:#9ca3af;">
+    .NET 9 · Vue 3 · PostgreSQL · Redis · Docker · Terraform · Nginx · AWS
+  </p>
+</div>
+
+<!-- TABLE OF CONTENTS -->
+<div class="toc">
+  <h2>Contents</h2>
+  <ol>
+    <li><a href="#microservices">Microservices — pros &amp; cons</a></li>
+    <li><a href="#monolith">Monolith — pros &amp; cons</a></li>
+    <li><a href="#call-stack">JS Call Stack Budget</a></li>
+    <li><a href="#event-loop">Event Loop</a></li>
+    <li><a href="#nodejs">Node.js Concurrency</a></li>
+    <li><a href="#promises">Pausing in a Promise</a></li>
+    <li><a href="#threading">Single- vs Multi-threading</a></li>
+    <li><a href="#nginx">Nginx — pros, cons &amp; alternatives</a></li>
+    <li><a href="#orm">ORM — pros &amp; cons</a></li>
+    <li><a href="#jvm">JVM vs Compiler</a></li>
+    <li><a href="#aspnet">ASP.NET Core — .NET 9 vs 8 vs 10</a></li>
+    <li><a href="#postgres">PostgreSQL — pros &amp; cons</a></li>
+    <li><a href="#redis">Redis — pros, cons &amp; alternatives</a></li>
+    <li><a href="#caching">Caching — strategies &amp; patterns</a></li>
+    <li><a href="#bcrypt">BCrypt — pros, cons &amp; alternatives</a></li>
+    <li><a href="#automapper">AutoMapper — pros, cons &amp; alternatives</a></li>
+    <li><a href="#mailkit">MailKit</a></li>
+    <li><a href="#serilog">Serilog — pros &amp; cons</a></li>
+    <li><a href="#vue3">Vue 3 — pros &amp; cons</a></li>
+    <li><a href="#jwt">JWT, Auth &amp; OAuth</a></li>
+    <li><a href="#background-jobs">Background DB Jobs</a></li>
+    <li><a href="#appdbcontext">AppDbContext &amp; EF Core internals</a></li>
+    <li><a href="#iac">IaC &amp; IaaS</a></li>
+    <li><a href="#containers">Containers — overview</a></li>
+    <li><a href="#docker">Docker</a></li>
+    <li><a href="#terraform">Terraform in this project</a></li>
+    <li><a href="#vite">Vite in this project</a></li>
+    <li><a href="#pinia">Pinia in this project</a></li>
+    <li><a href="#secrets">Secrets Manager &amp; secret handling</a></li>
+  </ol>
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 1. MICROSERVICES -->
+<h2 id="microservices">1. Microservices — Pros &amp; Cons</h2>
+
+<p>A microservices architecture decomposes an application into a set of small, independently deployable services, each owning its own data store and communicating over a network (HTTP/REST, gRPC, or message queues).</p>
+
+<h3>How it works</h3>
+<p>Each service is a separate process — potentially written in a different language, deployed on different hardware, scaled independently. A service mesh or API gateway often sits in front to handle routing, auth, and observability. Services discover each other via DNS, a registry (Consul, Eureka), or a cloud load balancer.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Independent deployability</strong> — change and ship the billing service without touching the user service</li>
+      <li><strong>Independent scalability</strong> — scale only the bottleneck (e.g. PDF rendering) without scaling the whole app</li>
+      <li><strong>Technology heterogeneity</strong> — use Python for ML, Go for high-throughput ingestion, C# for the business logic</li>
+      <li><strong>Fault isolation</strong> — a crash in one service doesn't bring down the entire system (with circuit breakers)</li>
+      <li><strong>Team autonomy</strong> — teams own their service end-to-end; Conway's Law becomes a feature</li>
+      <li><strong>Smaller codebases</strong> — each service is easier to understand, test, and onboard into</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Distributed systems complexity</strong> — network calls fail; you need retries, timeouts, circuit breakers, idempotency</li>
+      <li><strong>Data consistency</strong> — no cross-service transactions; you use eventual consistency and Saga patterns instead</li>
+      <li><strong>Operational overhead</strong> — each service needs its own CI/CD pipeline, health checks, logging, tracing, and deployment config</li>
+      <li><strong>Latency</strong> — an in-process function call (nanoseconds) becomes an HTTP call (milliseconds)</li>
+      <li><strong>Harder to debug</strong> — a request spans multiple services; you need distributed tracing (Jaeger, Zipkin) to follow it</li>
+      <li><strong>Over-engineering for small teams</strong> — the overhead rarely pays off below ~50 engineers</li>
+    </ul>
+  </div>
+</div>
+
+<div class="project-box">
+  <strong>In Tally's context:</strong> Tally is a monolith — the right call for a solo-built project. If it grew, you'd first extract the PDF generation service (CPU-intensive, independent) and the email service (async, no strong consistency requirements) before splitting anything else.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 2. MONOLITH -->
+<h2 id="monolith">2. Monolith — Pros &amp; Cons</h2>
+
+<p>A monolith deploys as a single unit. All modules share a process, memory space, and database. "Modular monolith" is a middle ground — strong internal boundaries (namespaces, project layers) but still a single deployable.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Simple to develop</strong> — one repo, one debugger, one deploy pipeline, no network calls between modules</li>
+      <li><strong>ACID transactions</strong> — you can wrap multiple business operations in a single DB transaction with no saga choreography</li>
+      <li><strong>Easy refactoring</strong> — rename a class or change an interface; the compiler tells you everywhere to fix</li>
+      <li><strong>Low latency</strong> — function calls, not network hops</li>
+      <li><strong>Straightforward testing</strong> — integration tests spin up the whole app in-process</li>
+      <li><strong>Lower infrastructure cost</strong> — one container/process to run, monitor, and log</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Scaling is all-or-nothing</strong> — you scale the entire app even if only one module is under load</li>
+      <li><strong>Long build/test cycles</strong> — as the codebase grows, CI slows down because everything must be rebuilt</li>
+      <li><strong>Deployment risk</strong> — every deploy touches the whole system; one bad change affects everything</li>
+      <li><strong>Technology lock-in</strong> — if you chose C# you're using C# everywhere</li>
+      <li><strong>Team coupling</strong> — large teams step on each other; merge conflicts are common</li>
+      <li><strong>Big bang failure</strong> — a crash or OOM kills the whole application</li>
+    </ul>
+  </div>
+</div>
+
+<div class="note">
+  <strong>Modular monolith pattern:</strong> Enforce strong module boundaries (separate projects/namespaces, interfaces-only cross-module communication, no direct DB access across modules) so that if you ever do split, the seams are already there. Tally's layered architecture (Controllers → Services → Repositories) is a step in this direction.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 3. CALL STACK -->
+<h2 id="call-stack">3. JS Call Stack Budget</h2>
+
+<p>The call stack is a LIFO (last-in, first-out) data structure that the JavaScript engine uses to track where in the program execution currently is. Every function call pushes a <em>stack frame</em> onto the stack; every return pops one off.</p>
+
+<h3>The budget</h3>
+<p>Every environment (V8, SpiderMonkey, JavaScriptCore) imposes a fixed maximum stack depth — typically around <strong>10,000–15,000 frames</strong> in Node.js. Exceeding it throws a <code>RangeError: Maximum call stack size exceeded</code>.</p>
+
+<h3>Why it matters</h3>
+<p>Each frame stores local variables, the return address, and arguments. Stack memory is a limited, contiguous region — unlike heap memory it can't grow dynamically. The engine pre-allocates it for predictable performance.</p>
+
+<pre>// Stack overflow — unbounded recursion
+function infinite() {
+  return infinite(); // each call pushes a frame, never pops
+}
+infinite(); // RangeError after ~10k frames
+
+// Fix 1: trampolining — return a function instead of calling it
+function trampoline(fn) {
+  let result = fn;
+  while (typeof result === 'function') result = result();
+  return result;
+}
+
+// Fix 2: tail-call optimisation (TCO)
+// ES6 spec defines TCO but V8 does NOT implement it in practice.
+// Safari/JavaScriptCore does. Don't rely on it in Node.js.
+
+// Fix 3: iterative approach — convert recursion to a loop
+function factorial(n) {
+  let acc = 1;
+  for (let i = 2; i &lt;= n; i++) acc *= i;
+  return acc;
+}</pre>
+
+<div class="warn">
+  <strong>Interview gotcha:</strong> TCO is in the ES6 spec but V8 intentionally does not implement it (it makes stack traces impossible to read). Always assume Node.js does NOT have TCO.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 4. EVENT LOOP -->
+<h2 id="event-loop">4. The Event Loop</h2>
+
+<p>JavaScript is single-threaded. The event loop is the mechanism that lets a single thread handle thousands of concurrent I/O operations without blocking.</p>
+
+<h3>Architecture</h3>
+
+<div class="diagram">┌─────────────────────────────────────────────────────────┐
+│                   Call Stack                            │
+│   (synchronous code executes here, one frame at a time) │
+└───────────────────────────┬─────────────────────────────┘
+                            │ stack empty?
+                            ▼
+┌───────────────────────────────────────────────────────────┐
+│                     Event Loop                            │
+│                                                           │
+│  1. microtask queue  (Promise callbacks, queueMicrotask)  │  ← drained completely first
+│  2. macrotask queue  (setTimeout, setInterval, I/O cb)    │  ← one task per loop tick
+│  3. check phase      (setImmediate — Node.js only)        │
+│  4. close callbacks  (socket.on('close', ...))            │
+└───────────────────────────────────────────────────────────┘</div>
+
+<h3>The phases in detail</h3>
+<ul>
+  <li><strong>timers</strong> — executes <code>setTimeout</code> and <code>setInterval</code> callbacks whose threshold has elapsed</li>
+  <li><strong>pending callbacks</strong> — I/O errors from the previous loop iteration</li>
+  <li><strong>idle/prepare</strong> — internal Node.js use only</li>
+  <li><strong>poll</strong> — retrieves new I/O events; if none are ready, blocks here waiting</li>
+  <li><strong>check</strong> — <code>setImmediate</code> callbacks run here (always after the current poll phase)</li>
+  <li><strong>close callbacks</strong> — e.g. <code>socket.destroy()</code></li>
+</ul>
+
+<h3>Microtask vs macrotask</h3>
+<p>After every macrotask, the event loop drains the <em>entire</em> microtask queue before moving on. This means chained <code>.then()</code> callbacks all run before the next <code>setTimeout</code> fires, even a <code>setTimeout(fn, 0)</code>.</p>
+
+<pre>console.log('1');
+setTimeout(() => console.log('4 - macrotask'), 0);
+Promise.resolve().then(() => console.log('2 - microtask'));
+queueMicrotask(() => console.log('3 - microtask'));
+// Output: 1, 2, 3, 4</pre>
+
+<div class="warn">
+  <strong>Blocking the event loop:</strong> Any synchronous operation that takes >1 ms starves all pending I/O. Never run CPU-heavy work (crypto, image processing, JSON parsing of huge payloads) on the main thread in Node.js — offload to a Worker Thread or a child process.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 5. NODE CONCURRENCY -->
+<h2 id="nodejs">5. Node.js Concurrency</h2>
+
+<p>Node.js achieves high concurrency with a single thread by delegating I/O to the OS (via <code>libuv</code>) and processing results asynchronously on the event loop. It does NOT run JavaScript in parallel — but it doesn't need to for I/O-bound work.</p>
+
+<h3>libuv and the thread pool</h3>
+<p>When you call <code>fs.readFile()</code>, Node doesn't wait — it hands the syscall to libuv, which uses OS async I/O (epoll on Linux, kqueue on macOS, IOCP on Windows) or a background thread pool for operations that don't have native async syscalls (DNS lookup, some crypto, file system). The default thread pool size is <strong>4 threads</strong> (configurable via <code>UV_THREADPOOL_SIZE</code>, max 1024).</p>
+
+<div class="diagram">  User code (JS thread)
+       │
+       ├── fs.readFile() ──────────────▶ libuv (OS async or thread pool)
+       ├── https.get()  ──────────────▶ libuv (OS async networking)
+       ├── bcrypt.hash() ─────────────▶ libuv thread pool
+       │
+  Event loop polls libuv for completed work
+       │
+       └── fires callback when I/O is done</div>
+
+<h3>Worker Threads (Node 12+)</h3>
+<p>For true CPU parallelism in Node.js use <code>worker_threads</code>. Workers run in separate V8 isolates with their own event loop, communicating via <code>postMessage</code>. Useful for: image processing, parsing, machine learning inference, any CPU-bound task.</p>
+
+<h3>Cluster module</h3>
+<p>The <code>cluster</code> module forks N worker processes (each with their own event loop and V8 heap), sharing the same port. The master distributes incoming connections. PM2 abstracts this. This is how Node.js scales across CPU cores on a single machine — multiple processes, not threads.</p>
+
+<div class="project-box">
+  <strong>Why this is irrelevant to Tally's backend:</strong> Tally uses ASP.NET Core, which is truly multi-threaded and handles concurrency natively via the CLR thread pool. Each HTTP request runs on a pool thread. <code>async/await</code> in C# releases the thread back to the pool while awaiting I/O, allowing tens of thousands of concurrent requests with a small thread pool.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 6. PROMISES -->
+<h2 id="promises">6. Pausing in a Promise</h2>
+
+<p>A <code>Promise</code> is an object representing the eventual result of an async operation. It is in one of three states: <em>pending</em>, <em>fulfilled</em>, or <em>rejected</em>. Once settled it is immutable.</p>
+
+<h3>How <code>await</code> pauses</h3>
+<p><code>await</code> is syntactic sugar over <code>.then()</code>. When the JS engine hits <code>await expr</code>:</p>
+<ol>
+  <li>It evaluates <code>expr</code> to get a Promise (or wraps a non-Promise in <code>Promise.resolve()</code>).</li>
+  <li>It <strong>suspends the current async function</strong> — saving its local state onto the heap (not the call stack).</li>
+  <li>It returns a new Promise to the caller immediately, freeing the call stack.</li>
+  <li>When the awaited Promise settles, a microtask is queued to resume the suspended function.</li>
+</ol>
+
+<pre>async function fetchData() {
+  console.log('A');           // runs synchronously
+  const data = await fetch('/api/data'); // suspends HERE — returns to event loop
+  console.log('B');           // runs after fetch resolves (microtask)
+  return data.json();
+}
+
+fetchData();
+console.log('C'); // runs before B — fetchData() suspended, caller continues
+// Output: A, C, B</pre>
+
+<h3>Pitfalls</h3>
+<ul>
+  <li><strong>Sequential awaits when parallel is possible:</strong> <code>await a; await b;</code> runs serially. Use <code>Promise.all([a, b])</code> to run concurrently.</li>
+  <li><strong>Unhandled rejections:</strong> a rejected Promise with no <code>.catch()</code> or <code>try/catch</code> around <code>await</code> crashes Node.js in recent versions.</li>
+  <li><strong>await in loops:</strong> <code>for...of</code> with <code>await</code> is sequential. Use <code>Promise.all(arr.map(async item => ...))</code> for parallel iteration.</li>
+</ul>
+
+<pre>// ❌ Sequential — waits for each one to finish before starting next
+for (const id of ids) {
+  const result = await fetchInvoice(id);
+}
+
+// ✅ Parallel — all requests in flight simultaneously
+const results = await Promise.all(ids.map(id => fetchInvoice(id)));
+</pre>
+
+
+<!-- ══════════════════════════════════════════════════════════ 7. THREADING -->
+<h2 id="threading">7. Single-threading vs Multi-threading</h2>
+
+<table>
+  <thead><tr><th>Aspect</th><th>Single-threaded</th><th>Multi-threaded</th></tr></thead>
+  <tbody>
+    <tr><td>Concurrency model</td><td>Event loop — one thread handles all JS; async I/O returns via callbacks</td><td>OS threads — multiple threads execute simultaneously on different cores</td></tr>
+    <tr><td>Shared state</td><td>No race conditions by design — no shared mutable state between JS threads</td><td>Shared heap; requires mutexes, locks, semaphores to prevent data races</td></tr>
+    <tr><td>Best for</td><td>I/O-bound workloads (web servers handling many connections, most CRUD apps)</td><td>CPU-bound workloads (compression, video encoding, ML inference)</td></tr>
+    <tr><td>Examples</td><td>Node.js (JS runtime), Redis (single-threaded command processing)</td><td>.NET CLR, JVM, Go goroutines (M:N threading), Rust threads</td></tr>
+    <tr><td>Failure modes</td><td>One blocking operation stalls everything</td><td>Deadlocks, race conditions, priority inversion, harder to debug</td></tr>
+    <tr><td>Memory</td><td>Lighter — one heap, no thread stacks per connection</td><td>Heavier — each thread has its own stack (~1MB per thread by default)</td></tr>
+  </tbody>
+</table>
+
+<h3>ASP.NET Core's model</h3>
+<p>ASP.NET Core uses the CLR thread pool. Each request is dispatched to a pool thread. When an <code>async</code> handler hits an <code>await</code>, it releases its thread back to the pool (thread is free to serve another request). When the I/O completes, any available thread resumes the continuation. This gives you the throughput of async I/O without Node's event loop constraint — CPU-bound work doesn't block other requests because the CLR scheduler will context-switch threads.</p>
+
+<pre>// C# — awaiting releases the thread
+[HttpGet("{id}")]
+public async Task&lt;IActionResult&gt; GetInvoice(int id)
+{
+    // Thread returns to pool while EF Core waits for Postgres
+    var invoice = await _invoiceRepo.GetByIdAsync(id);
+    return Ok(invoice);
+}</pre>
+
+
+<!-- ══════════════════════════════════════════════════════════ 8. NGINX -->
+<h2 id="nginx">8. Nginx — Pros, Cons &amp; Alternatives</h2>
+
+<p>Nginx (engine-x) is an event-driven, asynchronous web server and reverse proxy. It uses a master process + worker processes model where each worker handles thousands of connections in a single thread using epoll/kqueue.</p>
+
+<h3>In Tally</h3>
+<p>Nginx serves three roles: (1) terminates TLS with a Let's Encrypt certificate, (2) serves the compiled Vue SPA from the filesystem, (3) reverse-proxies <code>/api/</code> requests to the ASP.NET Core container on port 8080. Because both UI and API are on the same origin, there is no CORS configuration anywhere in the stack.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>High concurrency at low memory</strong> — event-driven; handles 10k+ connections per worker</li>
+      <li><strong>Static file serving</strong> — extremely fast; serves files directly from OS page cache</li>
+      <li><strong>TLS termination</strong> — offloads SSL handshakes from the application</li>
+      <li><strong>Reverse proxy / load balancer</strong> — upstream blocks, health checks, weighted round-robin</li>
+      <li><strong>Request buffering</strong> — buffers slow client uploads; app server only sees complete requests</li>
+      <li><strong>Gzip/Brotli compression</strong> — transparent to the app</li>
+      <li><strong>Mature and battle-tested</strong> — ~34% of all web servers worldwide</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Config syntax is not intuitive</strong> — <code>location</code> block matching rules have surprising precedence</li>
+      <li><strong>Modules are compile-time</strong> — unlike Apache, you can't add modules at runtime</li>
+      <li><strong>Lua scripting</strong> required for complex logic (OpenResty variant)</li>
+      <li><strong>Limited dynamic routing</strong> — not a full API gateway; no built-in rate limiting per user (requires Lua or Plus)</li>
+      <li><strong>No built-in service discovery</strong> — upstream IPs must be known at config time (or you use a resolver)</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Alternatives</h3>
+<table>
+  <thead><tr><th>Tool</th><th>Best for</th><th>Key difference</th></tr></thead>
+  <tbody>
+    <tr><td>Caddy</td><td>Auto TLS, simple config</td><td>Automatic HTTPS via ACME; config is JSON/Caddyfile (easier than nginx)</td></tr>
+    <tr><td>Traefik</td><td>Docker/K8s dynamic routing</td><td>Auto-discovers containers via labels; no config file reload needed</td></tr>
+    <tr><td>HAProxy</td><td>Pure TCP/HTTP load balancing</td><td>More powerful L4/L7 load balancing than nginx; no static file serving</td></tr>
+    <tr><td>AWS ALB</td><td>Cloud-native load balancing</td><td>Managed service; path-based routing, WAF integration, no server to maintain</td></tr>
+    <tr><td>Kong</td><td>API gateway with plugins</td><td>Rate limiting, auth, transformations as plugins; heavier than nginx</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ 9. ORM -->
+<h2 id="orm">9. ORM — Pros &amp; Cons</h2>
+
+<p>An ORM (Object-Relational Mapper) maps between object-oriented class hierarchies and relational database tables, handling SQL generation, connection management, and result mapping.</p>
+
+<p><strong>In Tally:</strong> EF Core with the Npgsql provider. Entities are C# classes; migrations track schema changes; LINQ queries are translated to SQL at runtime.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Type safety</strong> — LINQ queries are checked by the compiler; no SQL strings to mistype</li>
+      <li><strong>Code-first migrations</strong> — schema lives in source control alongside the code; <code>dotnet ef migrations add</code> generates SQL diffs</li>
+      <li><strong>Productivity</strong> — CRUD operations are one-liners; no boilerplate result mapping</li>
+      <li><strong>Change tracking</strong> — EF Core tracks entity state; calling <code>SaveChangesAsync()</code> batches all changes</li>
+      <li><strong>Database portability</strong> — swap Npgsql for SQLite for in-memory testing with minimal code changes</li>
+      <li><strong>Relationships</strong> — navigation properties; <code>Include()</code> for eager loading</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>N+1 queries</strong> — forgetting <code>.Include()</code> and lazy-loading inside a loop issues one query per row</li>
+      <li><strong>Generated SQL can be inefficient</strong> — complex LINQ sometimes generates suboptimal SQL; you need to profile</li>
+      <li><strong>Leaky abstractions</strong> — you still need to understand SQL to write performant queries and read migration output</li>
+      <li><strong>Overhead for bulk operations</strong> — updating 10,000 rows via EF Core is slower than a single <code>UPDATE WHERE</code>; use <code>ExecuteUpdateAsync()</code> or raw SQL</li>
+      <li><strong>Magic behaviour</strong> — change tracking, lazy loading, and cascade deletes can cause surprising side effects</li>
+    </ul>
+  </div>
+</div>
+
+<div class="project-box">
+  <strong>In Tally's OverdueInvoiceJob:</strong> The background job uses <code>ExecuteUpdateAsync()</code> — a bulk update that bypasses change tracking and issues a single SQL <code>UPDATE</code> statement. This is intentional: loading all overdue invoices into memory to set their status one-by-one would be an N+1 anti-pattern.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 10. JVM -->
+<h2 id="jvm">10. JVM vs Compiler (AOT)</h2>
+
+<h3>The JVM model (bytecode + JIT)</h3>
+<p>Java and Kotlin source code compiles to <em>bytecode</em> — a platform-neutral instruction set. The JVM interprets this bytecode and, over time, the <strong>JIT (Just-In-Time) compiler</strong> identifies hot paths and compiles them to native machine code. The JVM also manages garbage collection.</p>
+<ul>
+  <li><strong>Write once, run anywhere</strong> — the same .jar runs on any OS with a compatible JVM</li>
+  <li><strong>Warm-up cost</strong> — the JIT needs time to profile and compile; cold-start is slow (important for serverless/containers)</li>
+  <li><strong>Peak performance can be excellent</strong> — HotSpot JIT can surpass AOT for long-running processes by exploiting runtime profiling data (e.g. inlining virtual calls based on observed call sites)</li>
+</ul>
+
+<h3>AOT compilation (native compiler)</h3>
+<p>C, C++, Rust, and Go compile directly to native machine code for a specific target architecture. There is no runtime interpreter. The binary is self-contained.</p>
+<ul>
+  <li><strong>Instant startup</strong> — no JIT warm-up; good for CLIs, FaaS, containers</li>
+  <li><strong>Predictable performance</strong> — no GC pauses (in manual-memory or arena-allocation languages)</li>
+  <li><strong>Platform-specific</strong> — you compile separately for each target</li>
+</ul>
+
+<h3>Where does .NET sit?</h3>
+<p>.NET uses both. The CLR (Common Language Runtime) has a JIT compiler (RyuJIT) — the same bytecode (IL) runs on any platform, JIT-compiled at runtime. Since .NET 6, <strong>Native AOT</strong> is available — you can compile a .NET app directly to a native binary with no CLR runtime, achieving faster startup and smaller containers. Tally uses the standard JIT path (net9.0).</p>
+
+<table>
+  <thead><tr><th></th><th>JVM / CLR JIT</th><th>Native AOT (Go, Rust, .NET AOT)</th></tr></thead>
+  <tbody>
+    <tr><td>Cold start</td><td>Slow (JIT compilation)</td><td>Instant</td></tr>
+    <tr><td>Peak throughput</td><td>Excellent (profile-guided JIT)</td><td>Good (no runtime profiling)</td></tr>
+    <tr><td>Memory</td><td>Higher (JIT metadata, GC overhead)</td><td>Lower</td></tr>
+    <tr><td>Portability</td><td>Cross-platform binary</td><td>Platform-specific binary</td></tr>
+    <tr><td>Reflection / dynamic code</td><td>Full support</td><td>Limited (must be declared at compile time)</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ 11. ASPNET -->
+<h2 id="aspnet">11. ASP.NET Core — Why .NET 9, Not 8 or 10</h2>
+
+<h3>Why ASP.NET Core at all</h3>
+<ul>
+  <li>Strongly typed end-to-end (C# → EF Core → PostgreSQL)</li>
+  <li>Excellent built-in DI container; middleware pipeline is composable and explicit</li>
+  <li>First-class <code>async/await</code> with the CLR thread pool — handles I/O-bound CRUD extremely efficiently</li>
+  <li>Rich ecosystem: EF Core, JWT Bearer, Serilog, AutoMapper, MailKit all integrate cleanly</li>
+  <li>Health checks, output caching, OpenAPI support built into the framework</li>
+</ul>
+
+<h3>.NET 9 vs .NET 8</h3>
+<table>
+  <thead><tr><th>Feature</th><th>.NET 8 (LTS — supported to Nov 2026)</th><th>.NET 9 (STS — supported to May 2026)</th></tr></thead>
+  <tbody>
+    <tr><td>Support window</td><td>3 years (LTS)</td><td>18 months (STS)</td></tr>
+    <tr><td>Output caching improvements</td><td>Introduced in .NET 7/8</td><td>Further API refinements</td></tr>
+    <tr><td>EF Core version</td><td>EF Core 8</td><td>EF Core 9 — complex type mapping, bulk operations improvements</td></tr>
+    <tr><td>Garbage collector</td><td>GC DATAS mode</td><td>Dynamic PGO improvements, lower latency GC</td></tr>
+    <tr><td>Performance</td><td>Excellent baseline</td><td>10–30% throughput gains in benchmarks over .NET 8</td></tr>
+    <tr><td>Minimal API improvements</td><td>OpenAPI integration</td><td>Built-in OpenAPI document generation (no Swashbuckle needed)</td></tr>
+  </tbody>
+</table>
+
+<div class="note">
+  <strong>Why .NET 9 over .NET 8 for Tally:</strong> EF Core 9 introduces <code>ExecuteUpdateAsync</code> refinements, complex type mapping improvements, and the built-in OpenAPI document generation removes the Swashbuckle dependency. For a new project with no legacy constraints, .NET 9's performance improvements justify the shorter support window — especially since it will be superseded by .NET 10 LTS in November 2025.
+</div>
+
+<h3>Why not .NET 10</h3>
+<p>.NET 10 is the next LTS release (November 2025, supported to 2028). At the time Tally was built, .NET 10 was in preview — not suitable for a production project. When .NET 10 releases as LTS, upgrading from .NET 9 is straightforward (change the TargetFramework in the .csproj; breaking changes between STS and the next LTS are minimal by design).</p>
+
+
+<!-- ══════════════════════════════════════════════════════════ 12. POSTGRES -->
+<h2 id="postgres">12. PostgreSQL — Pros &amp; Cons</h2>
+
+<p>PostgreSQL is a fully ACID-compliant, open-source object-relational database. It uses an MVCC (Multi-Version Concurrency Control) model — readers never block writers and writers never block readers by keeping multiple row versions.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Full ACID compliance</strong> — transactions are durable; no half-written rows</li>
+      <li><strong>MVCC</strong> — high read-write concurrency without locking</li>
+      <li><strong>Rich data types</strong> — JSONB, arrays, ranges, composite types, PostGIS for geospatial</li>
+      <li><strong>Atomic upsert</strong> — <code>INSERT ... ON CONFLICT DO UPDATE ... RETURNING</code> — used in Tally's invoice counter</li>
+      <li><strong>Robust indexing</strong> — B-tree, GIN (full-text, JSONB), GiST, partial indexes, expression indexes</li>
+      <li><strong>Foreign keys &amp; constraints</strong> — enforced at DB level, not just the ORM</li>
+      <li><strong>Window functions, CTEs, lateral joins</strong> — powerful analytics without application-level aggregation</li>
+      <li><strong>Strong community, excellent documentation</strong></li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Write amplification</strong> — MVCC creates dead tuples; requires <code>VACUUM</code> (usually autovacuum) to reclaim space</li>
+      <li><strong>Not natively distributed</strong> — scaling writes requires Citus, Patroni/Patroni, or logical replication; horizontal sharding is complex</li>
+      <li><strong>Heavier than SQLite</strong> — requires a running server process; overkill for embedded or mobile use</li>
+      <li><strong>Schema migrations require care</strong> — adding a NOT NULL column to a large table locks it (use <code>ADD COLUMN DEFAULT</code> in Postgres 11+ which is instant)</li>
+      <li><strong>No built-in column-store</strong> — for OLAP workloads, TimescaleDB or an external DW (Redshift, BigQuery) is better</li>
+    </ul>
+  </div>
+</div>
+
+<div class="project-box">
+  <strong>Tally's specific use of Postgres:</strong> The <code>InvoiceCounters</code> table uses an atomic <code>INSERT ... ON CONFLICT DO UPDATE ... RETURNING</code> to generate sequential invoice numbers without a distributed lock or retry loop. This is only possible in Postgres (and MySQL 8+). SQLite's locking model would serialize all inserts; a pure application-level counter would have a race condition.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 13. REDIS -->
+<h2 id="redis">13. Redis — Pros, Cons &amp; Alternatives</h2>
+
+<p>Redis (Remote Dictionary Server) is an in-memory data structure store. It supports strings, hashes, lists, sets, sorted sets, streams, and more. Persistence is optional (RDB snapshots, AOF append-only log).</p>
+
+<p><strong>In Tally:</strong> Redis serves two purposes — <strong>JWT revocation blacklist</strong> (a SET of blacklisted JTI claims with TTL auto-expiry) and <strong>output caching</strong> of the <code>/api/invoices/summary</code> endpoint (30-second TTL).</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Sub-millisecond latency</strong> — all data in RAM; no disk I/O on reads</li>
+      <li><strong>TTL on every key</strong> — perfect for tokens, sessions, cache entries; expiry is automatic</li>
+      <li><strong>Atomic operations</strong> — <code>INCR</code>, <code>SETNX</code>, <code>LPUSH</code> etc. are atomic; useful for distributed locks (Redlock) and counters</li>
+      <li><strong>Pub/Sub and Streams</strong> — basic message queue without a separate broker</li>
+      <li><strong>Cluster mode</strong> — horizontal scaling via consistent hashing</li>
+      <li><strong>Mature ecosystem</strong> — StackExchange.Redis (.NET), ioredis (Node), Jedis (Java)</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Data is in RAM</strong> — expensive for large datasets; not a primary store for business data</li>
+      <li><strong>Single-threaded command processing</strong> — one slow Lua script blocks all other commands</li>
+      <li><strong>Persistence tradeoffs</strong> — RDB = potential data loss on crash; AOF = slower writes</li>
+      <li><strong>No complex queries</strong> — no JOINs, no LIKE searches (unless using RediSearch module)</li>
+      <li><strong>Cluster complexity</strong> — multi-key operations must hit the same slot; requires careful key design</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Alternatives</h3>
+<table>
+  <thead><tr><th>Tool</th><th>Use case</th><th>Difference from Redis</th></tr></thead>
+  <tbody>
+    <tr><td>Memcached</td><td>Simple key-value cache</td><td>Faster for pure caching (no persistence overhead); no data structures beyond strings; no pub/sub</td></tr>
+    <tr><td>Dragonfly</td><td>Redis-compatible drop-in</td><td>Multi-threaded; claims 25× throughput; same Redis protocol</td></tr>
+    <tr><td>KeyDB</td><td>Redis fork, multi-threaded</td><td>Open-source multi-threaded Redis fork; compatible API</td></tr>
+    <tr><td>Postgres (LISTEN/NOTIFY)</td><td>Lightweight pub/sub</td><td>If you already have Postgres, LISTEN/NOTIFY avoids adding Redis for simple event notifications</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ 14. CACHING -->
+<h2 id="caching">14. Caching — Strategies &amp; Patterns</h2>
+
+<p>Caching stores computed or fetched results so future requests can be served without re-computing or re-fetching. The goal is to reduce latency and reduce load on slower backing stores (database, external APIs).</p>
+
+<h3>Cache-aside (lazy loading)</h3>
+<p>The application checks the cache first. On miss, it queries the DB, writes the result to the cache, then returns it. This is what Tally's summary endpoint does.</p>
+<pre>// Pseudocode
+var cached = await redis.GetAsync(key);
+if (cached != null) return cached;
+var result = await db.ComputeSummaryAsync(userId);
+await redis.SetAsync(key, result, ttl: 30s);
+return result;</pre>
+
+<h3>Write-through</h3>
+<p>On every DB write, the application also updates the cache. Cache is always fresh. Higher write latency; cache always has data even before first read.</p>
+
+<h3>Write-behind (write-back)</h3>
+<p>Writes go to cache immediately; the cache asynchronously flushes to the DB. Very low write latency but risk of data loss on crash.</p>
+
+<h3>Read-through</h3>
+<p>Cache sits in front of the DB. The cache itself handles the DB read on a miss — the application only ever talks to the cache. Common in managed services (ElastiCache DAX for DynamoDB).</p>
+
+<h3>Cache invalidation strategies</h3>
+<ul>
+  <li><strong>TTL expiry</strong> — stale data serves for up to TTL seconds; simplest, eventual consistency</li>
+  <li><strong>Explicit invalidation</strong> — on write, delete or update the cache key; requires careful key design</li>
+  <li><strong>Tag-based invalidation</strong> — ASP.NET Core's output cache tags; Tally invalidates the <code>"summary"</code> tag whenever an invoice is created, updated, or deleted</li>
+  <li><strong>Cache-busting</strong> — versioned keys (<code>summary:v3</code>); deploy a new version and old data is ignored</li>
+</ul>
+
+<div class="warn">
+  <strong>"There are only two hard things in Computer Science: cache invalidation and naming things." — Phil Karlton.</strong> Stale cache serving incorrect data is often worse than no cache. Tag invalidation is safer than TTL-only for mutable business data.
+</div>
+
+<div class="project-box">
+  <strong>In Tally:</strong> <code>GET /api/invoices/summary</code> uses ASP.NET Core's output caching with a <code>SummaryCache</code> policy (30s TTL, varies by <code>Authorization</code> header so each user gets their own cache entry). The cache is tagged <code>"summary"</code>. The <code>InvoicesController</code> calls <code>cache.EvictByTagAsync("summary")</code> on any mutating operation, ensuring the summary is never stale after a write.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 15. BCRYPT -->
+<h2 id="bcrypt">15. BCrypt — Pros, Cons &amp; Alternatives</h2>
+
+<p>BCrypt is a password-hashing function designed in 1999 by Niels Provos and David Mazières. It is deliberately slow — it incorporates a cost factor (work factor) that can be increased as hardware gets faster. It also generates a random salt automatically and embeds it in the output hash.</p>
+
+<h3>How it works</h3>
+<p>BCrypt outputs a 60-character string: <code>$2a$&lt;cost&gt;$&lt;22-char-salt&gt;&lt;31-char-hash&gt;</code>. The cost factor (11 in Tally's seed data: <code>$2a$11$...</code>) means 2¹¹ = 2,048 iterations of the Blowfish cipher. On modern hardware, a cost-11 hash takes ~100ms. Doubling the cost to 12 doubles the time to ~200ms.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Adaptive cost factor</strong> — increase cost as hardware improves without changing the algorithm</li>
+      <li><strong>Built-in salt</strong> — each hash has a unique random salt; identical passwords produce different hashes</li>
+      <li><strong>Resists GPU/ASIC cracking</strong> — memory-intensive enough to make GPU parallelisation less effective than for MD5/SHA</li>
+      <li><strong>Widely audited</strong> — 25+ years of cryptanalysis; no practical attacks</li>
+      <li><strong>Simple API</strong> — <code>BCrypt.HashPassword()</code> / <code>BCrypt.Verify()</code></li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>72-byte input limit</strong> — BCrypt truncates passwords beyond 72 bytes; very long passwords are silently weaker</li>
+      <li><strong>Not the newest recommendation</strong> — OWASP now recommends Argon2id as first choice</li>
+      <li><strong>CPU-bound only</strong> — Argon2id is also memory-hard, making GPU cracking significantly more expensive</li>
+      <li><strong>Output format is not standardised</strong> — different implementations use <code>$2a$</code>, <code>$2b$</code>, <code>$2y$</code> variants</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Alternatives</h3>
+<table>
+  <thead><tr><th>Algorithm</th><th>OWASP recommendation</th><th>Key difference</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Argon2id</strong></td><td>First choice</td><td>Winner of Password Hashing Competition (2015); memory-hard AND compute-hard; resists GPU &amp; ASIC cracking better than BCrypt</td></tr>
+    <tr><td><strong>scrypt</strong></td><td>Second choice</td><td>Memory-hard; older than Argon2; configurable N, r, p parameters</td></tr>
+    <tr><td><strong>PBKDF2</strong></td><td>Third choice (but FIPS compliant)</td><td>NIST-approved; required for FIPS 140-2 compliance (government/finance); CPU-only, no memory hardness</td></tr>
+    <tr><td>MD5 / SHA-256</td><td>Never for passwords</td><td>No cost factor, no built-in salt — fast by design; crackable with GPU rainbow tables in seconds</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ 16. AUTOMAPPER -->
+<h2 id="automapper">16. AutoMapper — Pros, Cons &amp; Alternatives</h2>
+
+<p>AutoMapper is a .NET library that automatically maps properties between objects (typically entity → DTO). It uses conventions (matching property names) and user-defined profiles for custom mappings.</p>
+
+<p><strong>In Tally:</strong> <code>InvoiceMappingProfile</code> maps <code>Invoice</code> entity → <code>InvoiceDto</code>, <code>CreateInvoiceDto</code> → <code>Invoice</code>, etc. The mapping is configured once in the profile and used throughout the service layer via injected <code>IMapper</code>.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Eliminates boilerplate</strong> — no manual property assignment for simple mappings</li>
+      <li><strong>Centralised mapping config</strong> — all mappings in one place (the profile); easy to audit</li>
+      <li><strong>Supports complex projections</strong> — <code>ProjectTo&lt;T&gt;()</code> translates to SQL <code>SELECT</code> columns directly, avoiding over-fetching</li>
+      <li><strong>Compile-time configuration validation</strong> — <code>AssertConfigurationIsValid()</code> catches missing mappings at startup</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Magic / implicit behaviour</strong> — a renamed property silently stops mapping; hard to debug without config validation</li>
+      <li><strong>Reflection overhead</strong> — uses reflection internally; hot paths with thousands of mappings/second may be measurably slower than manual mapping</li>
+      <li><strong>Overkill for simple DTOs</strong> — 3-line mapping profile that maps 4 identical properties is often clearer written manually</li>
+      <li><strong>Learning curve</strong> — <code>ForMember()</code>, <code>ReverseMap()</code>, <code>ProjectTo()</code>, <code>Ignore()</code> have subtle behaviours</li>
+      <li><strong>Version 12+ breaking changes</strong> — AutoMapper v12 removed static mapper; forced DI injection</li>
+    </ul>
+  </div>
+</div>
+
+<h3>Alternatives</h3>
+<table>
+  <thead><tr><th>Library</th><th>Approach</th><th>Key difference</th></tr></thead>
+  <tbody>
+    <tr><td><strong>Mapster</strong></td><td>Code-gen, reflection, or source-gen</td><td>Faster than AutoMapper; source generator option produces zero-reflection mapping code</td></tr>
+    <tr><td><strong>Manual mapping</strong></td><td>Extension methods or constructors</td><td>Fully explicit, zero magic, zero dependencies; best for small DTOs where the mapping is obvious</td></tr>
+    <tr><td><strong>Records + <code>with</code></strong></td><td>C# record types</td><td>For DTOs that are immutable value types, records with <code>with</code> expressions can replace mapping for simple cases</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ 17. MAILKIT -->
+<h2 id="mailkit">17. MailKit</h2>
+
+<p>MailKit is a cross-platform .NET email library by Jeffrey Stedfast. It implements IMAP, POP3, and SMTP using <code>MimeKit</code> for message construction. It replaced <code>System.Net.Mail</code> as the recommended .NET email library because <code>SmtpClient</code> was marked obsolete.</p>
+
+<h3>Why MailKit over SmtpClient</h3>
+<ul>
+  <li><code>System.Net.Mail.SmtpClient</code> is not disposable correctly, doesn't support modern auth (OAuth2, XOAUTH2), and has poor async support</li>
+  <li>MailKit supports STARTTLS properly, OAuth2 authentication, SMTP AUTH mechanisms (PLAIN, LOGIN, XOAUTH2)</li>
+  <li>Full MIME support via MimeKit — multipart messages, attachments, HTML + text alternatives</li>
+  <li>Works with all major SMTP providers: Gmail, SendGrid, Mailgun, Amazon SES</li>
+</ul>
+
+<h3>In Tally</h3>
+<p>The <code>EmailService</code> uses MailKit to send password reset emails. Configuration comes from <code>appsettings.json</code> (SMTP host, port, credentials). In production, Gmail SMTP is used with app passwords. The service is abstracted behind <code>IEmailService</code> so it can be mocked in tests.</p>
+
+<pre>using MailKit.Net.Smtp;
+using MimeKit;
+
+var message = new MimeMessage();
+message.From.Add(new MailboxAddress("Tally", from));
+message.To.Add(new MailboxAddress("", toEmail));
+message.Subject = subject;
+message.Body = new TextPart("html") { Text = htmlBody };
+
+using var client = new SmtpClient();
+await client.ConnectAsync(smtp, port, SecureSocketOptions.StartTls);
+await client.AuthenticateAsync(username, password);
+await client.SendAsync(message);
+await client.DisconnectAsync(quit: true);</pre>
+
+
+<!-- ══════════════════════════════════════════════════════════ 18. SERILOG -->
+<h2 id="serilog">18. Serilog — Pros &amp; Cons</h2>
+
+<p>Serilog is a structured logging library for .NET. Unlike traditional loggers that write plain text strings, Serilog captures log events as structured data — property values are preserved as typed fields, not string-concatenated into a message.</p>
+
+<h3>Structured logging vs plain text</h3>
+<pre>// Plain text — hard to query
+_logger.LogInformation("Invoice " + id + " created by user " + userId);
+
+// Structured — properties are first-class fields
+Log.Information("Invoice {InvoiceId} created by {UserId}", id, userId);</pre>
+
+<p>In a structured log store (Seq, Elasticsearch, Loki), you can query <code>InvoiceId = 42</code> directly. In plain text you'd need to regex-parse the message string.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Structured output</strong> — JSON logs are machine-readable; easy to index in ELK, Splunk, Datadog, Grafana Loki</li>
+      <li><strong>Sinks</strong> — write to console, file, database, Seq, Elasticsearch, CloudWatch — all configurable without code changes</li>
+      <li><strong>Enrichers</strong> — automatically attach context: <code>FromLogContext</code>, machine name, thread ID, correlation IDs</li>
+      <li><strong>Minimal level overrides</strong> — suppress verbose EF Core SQL logs while keeping application-level Info logs</li>
+      <li><strong>Rolling files</strong> — Tally uses daily rolling with 14-day retention</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Configuration complexity</strong> — sink configuration via <code>appsettings.json</code> is powerful but verbose</li>
+      <li><strong>Destructuring can be surprising</strong> — <code>@</code> prefix for object destructuring vs <code>{Prop}</code> for scalar must be understood</li>
+      <li><strong>File sink is not centralised</strong> — in a multi-instance deployment, logs are split across instances; use a centralised sink (CloudWatch, Seq) instead</li>
+    </ul>
+  </div>
+</div>
+
+<div class="project-box">
+  <strong>In Tally:</strong> Serilog uses compact JSON formatting (<code>CompactJsonFormatter</code>) to both console and rolling daily files at <code>/app/logs/tally-.log</code>. EF Core and ASP.NET Core log levels are overridden to Warning to reduce noise. The compact JSON format is ready for ingestion by any log aggregator without further parsing.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 19. VUE 3 -->
+<h2 id="vue3">19. Vue 3 — Pros &amp; Cons</h2>
+
+<p>Vue 3 is a progressive JavaScript framework for building UIs. Its core is a reactivity system based on ES6 Proxies. The Composition API (<code>&lt;script setup&gt;</code>) is the modern way to write Vue components.</p>
+
+<div class="pc-grid">
+  <div class="pros">
+    <h4>Pros</h4>
+    <ul>
+      <li><strong>Composition API</strong> — logic is composed via functions (<code>ref</code>, <code>computed</code>, <code>watch</code>) rather than options objects; enables true code reuse via composables</li>
+      <li><strong>Reactivity via Proxy</strong> — fine-grained; only the exact components that read a changed ref re-render</li>
+      <li><strong>Single File Components</strong> — template, script, and style in one <code>.vue</code> file; great locality</li>
+      <li><strong>TypeScript-first</strong> — Volar plugin gives full type inference inside <code>&lt;template&gt;</code> for <code>&lt;script setup lang="ts"&gt;</code></li>
+      <li><strong>Smaller bundle</strong> — tree-shakeable; unused features are not included</li>
+      <li><strong>Gentle learning curve</strong> — HTML-based template syntax is approachable; Composition API scales to complex apps</li>
+    </ul>
+  </div>
+  <div class="cons">
+    <h4>Cons</h4>
+    <ul>
+      <li><strong>Smaller ecosystem than React</strong> — fewer third-party component libraries; some niches are underserved</li>
+      <li><strong>Meta-framework choices</strong> — React has Next.js as a clear winner; Vue has Nuxt but with less community mass</li>
+      <li><strong>Two APIs (Options + Composition)</strong> — existing codebases may mix them; new devs need to learn which to use</li>
+      <li><strong>Template magic</strong> — <code>v-model</code> modifiers, scoped slots, dynamic components can be confusing to debug</li>
+      <li><strong>Corporate backing</strong> — maintained by Evan You + community (not a large company); lower "enterprise safety" perception</li>
+    </ul>
+  </div>
+</div>
+
+<div class="project-box">
+  <strong>In Tally:</strong> All components use <code>&lt;script setup lang="ts"&gt;</code> with Composition API only. Composables (<code>useInvoices.ts</code>, <code>useValidation.ts</code>) extract reusable logic. The reactive stores (Pinia) drive the UI state. Tests use <code>@vue/test-utils</code> to mount components and <code>@pinia/testing</code> to mock stores.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 20. JWT -->
+<h2 id="jwt">20. JWT, Auth &amp; OAuth</h2>
+
+<h3>What is a JWT?</h3>
+<p>A JSON Web Token is a compact, URL-safe string made of three Base64-URL-encoded parts separated by dots: <code>header.payload.signature</code>.</p>
+<ul>
+  <li><strong>Header</strong> — algorithm (HS256, RS256) and token type</li>
+  <li><strong>Payload</strong> — claims: <code>sub</code> (subject/user ID), <code>exp</code> (expiry), <code>iss</code> (issuer), <code>aud</code> (audience), <code>jti</code> (JWT ID — unique per token), plus custom claims (role)</li>
+  <li><strong>Signature</strong> — HMAC-SHA256(base64(header) + "." + base64(payload), secret)</li>
+</ul>
+
+<p>The server validates the signature. No database lookup is needed to verify a JWT — the signature proves it wasn't tampered with and the expiry is encoded in the payload.</p>
+
+<h3>Access + Refresh token pattern (Tally)</h3>
+<div class="diagram">  Login ──────────────────────▶ API
+                              │
+                              └──▶ access token (25 min, JWT)
+                              └──▶ refresh token (7 days, opaque, stored in DB)
+
+  Authenticated request:
+  client ──[Authorization: Bearer &lt;access_token&gt;]──▶ API
+  API validates signature + expiry + Redis blacklist check
+
+  Silent refresh (1 min before access token expires):
+  client ──[POST /auth/refresh, body: refreshToken]──▶ API
+  API checks RefreshTokens table, issues new token pair, invalidates old refresh token
+
+  Logout:
+  API blacklists the JTI in Redis (TTL = remaining lifetime)
+  API marks the refresh token as revoked in DB</div>
+
+<h3>HS256 vs RS256</h3>
+<table>
+  <thead><tr><th></th><th>HS256 (symmetric)</th><th>RS256 (asymmetric)</th></tr></thead>
+  <tbody>
+    <tr><td>Key</td><td>One shared secret — both issuer and verifier use the same key</td><td>Private key signs; public key verifies — verifiers don't need the private key</td></tr>
+    <tr><td>Use when</td><td>Single service issues and verifies tokens (Tally's case)</td><td>Multiple services need to verify; external parties (OAuth resource servers)</td></tr>
+    <tr><td>Security risk</td><td>If any verifier is compromised, they could forge tokens</td><td>Leaking the public key is safe; only leaking the private key is dangerous</td></tr>
+  </tbody>
+</table>
+
+<h3>OAuth 2.0 vs JWT</h3>
+<p>OAuth 2.0 is an <em>authorisation framework</em> — it defines flows (Authorization Code, Client Credentials, Implicit, Device) for delegating access. JWT is a <em>token format</em> — it can be used as the token inside OAuth flows (as an access token). They are not alternatives to each other.</p>
+
+<p><strong>OpenID Connect (OIDC)</strong> is an identity layer on top of OAuth 2.0 that adds a standard <code>id_token</code> (always a JWT) containing user identity claims. OIDC is how "Sign in with Google" works — Google issues an OIDC id_token after OAuth consent.</p>
+
+<div class="note">
+  <strong>Known issue in Tally:</strong> Tokens are stored in <code>localStorage</code> — readable by any JavaScript on the page (XSS risk). The planned migration is to HttpOnly cookies, which are inaccessible to JavaScript. This is a real trade-off: localStorage is simpler for SPAs (no CSRF concern) but HttpOnly cookies are more secure against XSS.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 21. BACKGROUND JOBS -->
+<h2 id="background-jobs">21. Background DB Jobs</h2>
+
+<p>Background jobs are tasks that run outside the HTTP request-response cycle — either on a schedule, triggered by an event, or continuously.</p>
+
+<h3>In Tally: <code>OverdueInvoiceJob</code></h3>
+<p>This is an <code>IHostedService</code> — a .NET interface for long-running background tasks. The CLR starts it on app startup and calls <code>StopAsync()</code> on shutdown. The job:</p>
+<ol>
+  <li>Calculates the time until next midnight UTC</li>
+  <li>Awaits that delay (the thread is released; no CPU consumption while waiting)</li>
+  <li>Issues a bulk <code>ExecuteUpdateAsync()</code> to mark all <code>Sent</code> invoices past their due date as <code>Overdue</code></li>
+  <li>Loops back to step 1</li>
+</ol>
+
+<pre>// EF Core 7+ bulk update — single SQL UPDATE, no change tracking
+await _context.Invoices
+    .Where(i =&gt; i.Status == InvoiceStatus.Sent &amp;&amp; i.DueDate &lt; DateTime.UtcNow)
+    .ExecuteUpdateAsync(s =&gt; s.SetProperty(i =&gt; i.Status, InvoiceStatus.Overdue));</pre>
+
+<h3>IHostedService vs alternatives</h3>
+<table>
+  <thead><tr><th>Approach</th><th>Best for</th><th>Limitation</th></tr></thead>
+  <tbody>
+    <tr><td>IHostedService (Tally)</td><td>Simple recurring jobs in a single-instance app</td><td>No persistence — if the app crashes mid-job, the job is lost; no retry; no history</td></tr>
+    <tr><td>Hangfire</td><td>Persistent job queue with dashboard, retries, cron scheduling</td><td>Requires a backing store (SQL/Redis); adds a library dependency</td></tr>
+    <tr><td>Quartz.NET</td><td>Complex cron schedules, job listeners, misfires</td><td>More configuration than Hangfire for simple cases</td></tr>
+    <tr><td>Message queue (RabbitMQ/SQS)</td><td>Event-driven jobs, distributed workers</td><td>Requires a broker; Tally has a TODO for this (RabbitMQ for async invoice processing)</td></tr>
+    <tr><td>Azure Functions / AWS Lambda</td><td>Serverless scheduled jobs</td><td>Cold starts; not co-located with the app</td></tr>
+  </tbody>
+</table>
+
+
+<!-- ══════════════════════════════════════════════════════════ 22. APPDBCONTEXT -->
+<h2 id="appdbcontext">22. AppDbContext &amp; How EF Core Handles It</h2>
+
+<p><code>AppDbContext</code> is the unit-of-work and gateway to the database in EF Core. It inherits from <code>DbContext</code> and exposes <code>DbSet&lt;T&gt;</code> properties for each entity.</p>
+
+<h3>Registration and lifetime</h3>
+<p>In ASP.NET Core, <code>AppDbContext</code> is registered with <code>AddDbContext&lt;AppDbContext&gt;()</code>. This registers it as <strong>scoped</strong> by default — one instance per HTTP request. This is intentional: a scoped DbContext means all repositories and services within a single request share the same context (and thus the same change tracker and the same transaction if needed).</p>
+
+<pre>builder.Services.AddDbContext&lt;AppDbContext&gt;(options =&gt;
+    options.UseNpgsql(connectionString));</pre>
+
+<div class="warn">
+  <strong>Never register DbContext as Singleton.</strong> DbContext is not thread-safe — it holds state (change tracker, open connections). A singleton DbContext shared across requests causes concurrency exceptions and stale data.
+</div>
+
+<h3>Change tracking</h3>
+<p>EF Core tracks every entity loaded from the database. When you call <code>SaveChangesAsync()</code>, it compares current state to the original snapshot and issues the minimal set of SQL statements (INSERT, UPDATE, DELETE).</p>
+<ul>
+  <li><strong>EntityState.Added</strong> → <code>INSERT</code></li>
+  <li><strong>EntityState.Modified</strong> → <code>UPDATE</code> (only changed columns)</li>
+  <li><strong>EntityState.Deleted</strong> → <code>DELETE</code></li>
+  <li><strong>EntityState.Unchanged</strong> → no SQL</li>
+</ul>
+
+<h3>AsNoTracking for reads</h3>
+<p>When you only need to read data (no update), call <code>.AsNoTracking()</code> on the query. EF Core skips change tracking — no snapshot is stored in memory, reducing allocation and improving performance.</p>
+
+<pre>// Read-only query — no need to track
+var invoices = await _context.Invoices
+    .AsNoTracking()
+    .Where(i =&gt; i.UserId == userId)
+    .ToListAsync();</pre>
+
+<h3>Connection pooling</h3>
+<p>EF Core does not hold a physical database connection open for the lifetime of the DbContext. It uses ADO.NET connection pooling (<code>Npgsql</code> in Tally's case). A physical connection is only acquired when a query is actually executed, and released back to the pool immediately after. This allows a small pool of physical connections to serve thousands of concurrent HTTP requests.</p>
+
+<h3>Migrations in Tally</h3>
+<p>Migrations run automatically on startup via <code>Database.Migrate()</code> in <code>Program.cs</code>. EF Core checks the <code>__EFMigrationsHistory</code> table and applies any pending migrations. This is acceptable for a single-instance app but risky for multi-instance deployments (race condition on startup) — use <code>Database.MigrateAsync()</code> with a distributed lock or a separate migration job in that case.</p>
+
+
+<!-- ══════════════════════════════════════════════════════════ 23. IAC -->
+<h2 id="iac">23. IaC &amp; IaaS</h2>
+
+<h3>IaaS — Infrastructure as a Service</h3>
+<p>IaaS is a cloud service model where the provider (AWS, Azure, GCP) supplies raw compute, storage, and networking infrastructure. You provision virtual machines, storage volumes, and network configuration. You manage the OS, runtime, and application. The provider manages the physical hardware.</p>
+<ul>
+  <li>Examples: AWS EC2, Azure Virtual Machines, GCP Compute Engine</li>
+  <li>Tally runs on <strong>AWS EC2</strong> — an IaaS virtual machine. You control the OS (Amazon Linux), Docker installation, and deployment scripts.</li>
+</ul>
+
+<h3>Contrast with PaaS and SaaS</h3>
+<table>
+  <thead><tr><th>Model</th><th>You manage</th><th>Provider manages</th><th>Example</th></tr></thead>
+  <tbody>
+    <tr><td>IaaS</td><td>OS, runtime, app, data</td><td>Hardware, networking, virtualisation</td><td>EC2, Azure VM</td></tr>
+    <tr><td>PaaS</td><td>App, data</td><td>OS, runtime, scaling, patching</td><td>Heroku, AWS Elastic Beanstalk, Azure App Service</td></tr>
+    <tr><td>SaaS</td><td>Configuration only</td><td>Everything</td><td>GitHub, Slack, Salesforce</td></tr>
+    <tr><td>CaaS</td><td>Container images, config</td><td>Container orchestration, OS</td><td>AWS ECS, Azure Container Apps, GKE</td></tr>
+  </tbody>
+</table>
+
+<h3>IaC — Infrastructure as Code</h3>
+<p>IaC means declaring your infrastructure in code (version-controlled, reviewed, repeatable) rather than clicking through a web console. Key properties:</p>
+<ul>
+  <li><strong>Idempotent</strong> — running the same IaC twice produces the same result, no duplicates</li>
+  <li><strong>Version controlled</strong> — infrastructure changes are tracked in git with diffs and history</li>
+  <li><strong>Reproducible</strong> — spin up an identical environment in a new region with one command</li>
+  <li><strong>Self-documenting</strong> — the code describes exactly what exists</li>
+</ul>
+
+<p>Tally uses <strong>Terraform</strong> as its IaC tool. The <code>terraform/ec2/main.tf</code> provisions the EC2 instance, Elastic IP, security groups, IAM role, and Secrets Manager secret. The <code>terraform/main.tf</code> manages the PostgreSQL database schema and seed data.</p>
+
+
+<!-- ══════════════════════════════════════════════════════════ 24. CONTAINERS -->
+<h2 id="containers">24. Containers — Overview</h2>
+
+<p>A container is a lightweight, isolated unit of software that packages an application and all its dependencies (runtime, libraries, config) into a single image. Containers share the host OS kernel but are isolated via Linux namespaces (process, network, mount, user) and cgroups (resource limits).</p>
+
+<h3>Containers vs VMs</h3>
+<table>
+  <thead><tr><th></th><th>Virtual Machine</th><th>Container</th></tr></thead>
+  <tbody>
+    <tr><td>Isolation</td><td>Full OS virtualisation (hypervisor)</td><td>Kernel namespaces + cgroups</td></tr>
+    <tr><td>Startup time</td><td>Minutes (full OS boot)</td><td>Milliseconds (process start)</td></tr>
+    <tr><td>Size</td><td>GBs (includes full OS)</td><td>MBs (just app + dependencies)</td></tr>
+    <tr><td>Resource overhead</td><td>High (each VM has its own kernel)</td><td>Low (shared kernel)</td></tr>
+    <tr><td>Security boundary</td><td>Stronger (hypervisor separation)</td><td>Weaker (shared kernel — a kernel exploit can escape)</td></tr>
+    <tr><td>Portability</td><td>Heavy (VM image tied to hypervisor)</td><td>Runs anywhere Docker/OCI runtime is installed</td></tr>
+  </tbody>
+</table>
+
+<h3>OCI and Docker</h3>
+<p>The Open Container Initiative (OCI) defines the container image format and runtime spec. Docker popularised containers and its image format became the OCI standard. Alternatives to Docker Desktop: <code>Podman</code> (daemonless, rootless), <code>nerdctl</code> (containerd CLI), <code>Lima</code> (macOS VM for Linux containers).</p>
+
+
+<!-- ══════════════════════════════════════════════════════════ 25. DOCKER -->
+<h2 id="docker">25. Docker</h2>
+
+<p>Docker is the toolchain for building, distributing, and running container images. Key concepts: <strong>image</strong> (immutable blueprint, built from a Dockerfile), <strong>container</strong> (running instance of an image), <strong>registry</strong> (Docker Hub, ECR, GHCR — image storage), <strong>volume</strong> (persistent storage mounted into a container), <strong>network</strong> (virtual networks between containers).</p>
+
+<h3>Tally's Docker setup</h3>
+
+<div class="diagram">  Dockerfile            → tally_api image  (ASP.NET Core 9 on mcr.microsoft.com/dotnet/aspnet:9.0)
+  Dockerfile.frontend   → tally_frontend image (nginx:alpine serving compiled Vue)
+
+  docker-compose.yml:
+  ┌─────────────────────────────────────────────────────┐
+  │  tally_frontend (nginx)  — exposes :80, :443         │
+  │       │                                              │
+  │       ├── serves /app/dist  (Vue SPA)               │
+  │       └── proxies /api/  ──▶ tally_api:8080         │
+  │                                                      │
+  │  tally_api (.NET 9)      — internal :8080            │
+  │       ├── depends on: postgres (healthy)             │
+  │       └── depends on: redis (healthy)                │
+  │                                                      │
+  │  tally_db (postgres:16)  — internal :5432            │
+  │  tally_redis (redis:7)   — internal :6379            │
+  └─────────────────────────────────────────────────────┘
+  Ports 5432 and 6379 NOT exposed to host — containers
+  reach each other via Docker's internal bridge network.</div>
+
+<h3>Key Docker concepts used in Tally</h3>
+<ul>
+  <li><strong>Multi-stage build</strong> — the <code>Dockerfile</code> uses a build stage (<code>mcr.microsoft.com/dotnet/sdk:9.0</code>) to compile the app, then copies only the output to a smaller runtime image (<code>aspnet:9.0</code>). The SDK (hundreds of MBs) is not in the final image.</li>
+  <li><strong>Health checks</strong> — Postgres and Redis containers define <code>healthcheck</code> in <code>docker-compose.yml</code>; the API container starts only when they are healthy (<code>depends_on: condition: service_healthy</code>).</li>
+  <li><strong>Named volumes</strong> — <code>postgres_data</code> and <code>redis_data</code> persist data across container restarts</li>
+  <li><strong>Environment variable injection</strong> — secrets (<code>JWT_KEY</code>, <code>POSTGRES_PASSWORD</code>) come from the host environment, never baked into the image</li>
+</ul>
+
+<div class="note">
+  <strong>Why Postgres and Redis ports are not exposed to the host:</strong> Exposing port 5432 to the public internet would allow anyone to attempt a database connection. By keeping them on Docker's internal network, only containers on the same Compose network can reach them.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 26. TERRAFORM -->
+<h2 id="terraform">26. Terraform &amp; How It's Used in Tally</h2>
+
+<p>Terraform (by HashiCorp) is a declarative IaC tool. You describe the desired state of infrastructure in HCL (HashiCorp Configuration Language); Terraform computes a plan (diff) and applies it. It tracks what it has created in a <em>state file</em>.</p>
+
+<h3>Core concepts</h3>
+<ul>
+  <li><strong>Provider</strong> — plugin that talks to an API (AWS, PostgreSQL, GitHub). Tally uses the <code>cyrilgdn/postgresql</code> provider and the <code>aws</code> provider in the ec2 module.</li>
+  <li><strong>Resource</strong> — a managed piece of infrastructure (<code>postgresql_database</code>, <code>aws_instance</code>)</li>
+  <li><strong>Variable</strong> — input parameter to a module; passed at runtime</li>
+  <li><strong>Output</strong> — value exported from a module (e.g. the connection string)</li>
+  <li><strong>State</strong> — Terraform tracks created resources in <code>terraform.tfstate</code>. In production, state is stored remotely (S3 + DynamoDB lock) to allow team collaboration and prevent conflicts.</li>
+  <li><strong>Plan</strong> — <code>terraform plan</code> shows what will be created/changed/destroyed without doing it</li>
+  <li><strong>Apply</strong> — <code>terraform apply</code> makes the changes; idempotent (re-running has no effect if state matches desired)</li>
+</ul>
+
+<h3>What Tally's Terraform does</h3>
+<p><strong><code>terraform/main.tf</code></strong> — manages the PostgreSQL database schema (using the <code>postgresql</code> provider): creates the database, generates a <code>seed.sql</code> file as a <code>local_file</code> resource, and applies it via a <code>null_resource</code> + <code>local-exec</code> provisioner (runs <code>psql</code> on the local machine).</p>
+
+<p><strong><code>terraform/ec2/main.tf</code></strong> — provisions AWS infrastructure:</p>
+<ul>
+  <li>EC2 instance (Amazon Linux, t2.micro/t3.micro)</li>
+  <li>Elastic IP — static public IP so the DNS record doesn't need updating on stop/start</li>
+  <li>Security group — allows 80 (HTTP), 443 (HTTPS), 22 (SSH)</li>
+  <li>IAM instance role — grants the EC2 instance permission to read from Secrets Manager</li>
+  <li>Secrets Manager secret — stores the JWT key, Postgres password, email credentials</li>
+  <li>EC2 user-data script — installs Docker on first boot, writes a <code>fetch-secrets.sh</code> script that pulls secrets from Secrets Manager at deploy time</li>
+</ul>
+
+
+<!-- ══════════════════════════════════════════════════════════ 27. VITE -->
+<h2 id="vite">27. Vite &amp; How It's Used in Tally</h2>
+
+<p>Vite (French for "fast") is a next-generation frontend build tool by Evan You (Vue's creator). It serves as both a dev server and a production bundler (using Rollup under the hood for prod).</p>
+
+<h3>Why Vite is fast in development</h3>
+<p>Traditional bundlers (Webpack) bundle the entire application before serving. Vite uses native ES Modules — the browser imports files directly. The dev server only transforms a file when the browser requests it (lazy transformation). Hot Module Replacement is near-instant because only the changed module is re-evaluated, not the whole bundle.</p>
+
+<h3>Production build</h3>
+<p>In production, <code>npm run build</code> runs <code>vue-tsc</code> (TypeScript type checking) then <code>vite build</code>. Vite uses Rollup to bundle and tree-shake the output. Code splitting is automatic — each route chunk is a separate file. The output is hashed filenames (<code>main.a3b4c5d6.js</code>) for cache busting.</p>
+
+<h3>In Tally</h3>
+<ul>
+  <li>Dev server: <code>npm run dev</code> — Vite serves modules natively, connects to the API at <code>VITE_API_URL</code> from <code>.env.development</code></li>
+  <li>Production: <code>vite build</code> compiles the Vue app to static files in <code>dist/</code>; the <code>Dockerfile.frontend</code> copies this <code>dist/</code> into an nginx container</li>
+  <li><code>@vitejs/plugin-vue</code> — transforms <code>.vue</code> SFCs</li>
+  <li><code>VITE_API_URL</code> — in production is set to <code>/</code> because nginx proxies <code>/api/</code> on the same origin — no cross-origin requests, no CORS</li>
+</ul>
+
+
+<!-- ══════════════════════════════════════════════════════════ 28. PINIA -->
+<h2 id="pinia">28. Pinia &amp; How It's Used in Tally</h2>
+
+<p>Pinia is the official Vue 3 state management library. It replaced Vuex. Each store is a composable — you define state, getters (computed), and actions (async functions) in a single <code>defineStore()</code> call.</p>
+
+<h3>Why Pinia over Vuex</h3>
+<ul>
+  <li><strong>No mutations</strong> — Vuex required <code>commit('MUTATION_NAME')</code>; Pinia lets you modify state directly in actions</li>
+  <li><strong>TypeScript-first</strong> — full type inference for state, getters, and actions without boilerplate</li>
+  <li><strong>DevTools integration</strong> — Vue DevTools shows store state, actions, and time-travel debugging</li>
+  <li><strong>Simpler API</strong> — <code>defineStore('auth', () => { ... })</code> looks like a composable</li>
+</ul>
+
+<h3>Tally's stores</h3>
+<table>
+  <thead><tr><th>Store</th><th>State held</th><th>Key actions</th></tr></thead>
+  <tbody>
+    <tr><td><code>authStore</code></td><td>JWT token, refresh token, user, expiry</td><td><code>login()</code>, <code>logout()</code>, <code>register()</code>, <code>silentRefresh()</code>, <code>restoreSession()</code></td></tr>
+    <tr><td><code>invoiceStore</code></td><td>Invoice list, loading/error state, filters</td><td><code>fetchInvoices()</code>, <code>createInvoice()</code>, <code>updateInvoice()</code>, <code>deleteInvoice()</code></td></tr>
+    <tr><td><code>clientStore</code></td><td>Client list</td><td><code>fetchClients()</code>, <code>createClient()</code>, <code>updateClient()</code>, <code>deleteClient()</code></td></tr>
+  </tbody>
+</table>
+
+<div class="project-box">
+  <strong>Silent refresh in authStore:</strong> On login, <code>authStore</code> parses the JWT expiry from the token payload and calls <code>setTimeout</code> to schedule <code>silentRefresh()</code> 60 seconds before expiry. On page reload, <code>restoreSession()</code> reads tokens from <code>localStorage</code>, checks if the access token is still valid, and either re-arms the timer or immediately refreshes if already expired. This makes the session feel seamless — the user is never unexpectedly logged out mid-session.
+</div>
+
+
+<!-- ══════════════════════════════════════════════════════════ 29. SECRETS -->
+<h2 id="secrets">29. Secrets Manager &amp; How Secrets Are Managed in Tally</h2>
+
+<h3>The problem</h3>
+<p>Secrets (database passwords, JWT signing keys, SMTP credentials) must never be committed to source control, embedded in Docker images, or stored in Terraform state in plaintext.</p>
+
+<h3>In development (local)</h3>
+<p>ASP.NET Core's <strong>User Secrets</strong> (<code>dotnet user-secrets</code>) stores development secrets in a JSON file outside the project directory (<code>~/.microsoft/usersecrets/&lt;user-secrets-id&gt;/secrets.json</code>). The <code>UserSecretsId</code> in <code>InvoiceTrackerAPI2.csproj</code> ties this project to its secrets file. They are never committed. They are loaded automatically by ASP.NET Core in Development environment only.</p>
+
+<h3>In production (AWS EC2)</h3>
+<p>Tally uses <strong>AWS Secrets Manager</strong>:</p>
+<ol>
+  <li>Terraform creates a Secrets Manager secret and an IAM role that grants the EC2 instance <code>secretsmanager:GetSecretValue</code> permission</li>
+  <li>The EC2 instance has the IAM role attached — no AWS access keys are stored anywhere on the instance</li>
+  <li>A <code>fetch-secrets.sh</code> script (written by Terraform's user-data) runs at deploy time, calls <code>aws secretsmanager get-secret-value</code>, and writes the values to a <code>.env</code> file on the EC2 host</li>
+  <li>Docker Compose reads from the <code>.env</code> file when starting containers — secrets are injected as environment variables</li>
+</ol>
+
+<div class="diagram">  Secrets Manager (AWS)
+       │
+       └── IAM role attached to EC2 (no static access keys)
+              │
+              └── fetch-secrets.sh pulls secrets at deploy time
+                     │
+                     └── writes to /home/ec2-user/tally/.env
+                            │
+                            └── Docker Compose injects as env vars
+                                   │
+                                   └── ASP.NET Core reads via IConfiguration</div>
+
+<h3>Why this approach</h3>
+<ul>
+  <li><strong>No secrets in git</strong> — the repo contains no real credentials anywhere</li>
+  <li><strong>No secrets in the Docker image</strong> — secrets are injected at runtime, not baked into the image layer</li>
+  <li><strong>No secrets in Terraform state</strong> — the Secrets Manager secret <em>resource</em> is in state, but the secret <em>value</em> is set manually via AWS console or CLI, not via Terraform</li>
+  <li><strong>Rotation support</strong> — Secrets Manager supports automatic rotation; rotating a secret doesn't require a code or infrastructure change</li>
+  <li><strong>Audit trail</strong> — AWS CloudTrail logs every <code>GetSecretValue</code> call</li>
+</ul>
+
+<div class="warn">
+  <strong>The .env file on disk is a risk:</strong> Anyone with SSH access to the EC2 instance can read it. This is acceptable for a single-instance project; in a higher-security context, you'd inject secrets directly from Secrets Manager into the container at runtime (using ECS task definitions with <code>secrets:</code> blocks) rather than writing to a file on disk.
+</div>
+
+</body>
+</html>

@@ -7,10 +7,9 @@ services:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
       POSTGRES_DB: invoicetracker
-    # Port 5432 not exposed to the host — the api container reaches postgres
-    # over Docker's internal network. Uncomment only if you need a local DB client.
-    # ports:
-    #   - "5432:5432"
+    # Port exposed for DBeaver/local DB client access via SSH tunnel
+    ports:
+      - "5432:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
       - ./terraform/seed.sql:/docker-entrypoint-initdb.d/seed.sql:ro

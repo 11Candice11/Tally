@@ -58,9 +58,9 @@ public class InvoiceServiceTests
 
         var numbers = new[] { a.InvoiceNumber, b.InvoiceNumber, c.InvoiceNumber };
         Assert.Equal(numbers.Distinct().Count(), numbers.Length); // all unique
-        Assert.EndsWith("-0001", numbers[0]);
-        Assert.EndsWith("-0002", numbers[1]);
-        Assert.EndsWith("-0003", numbers[2]);
+        Assert.EndsWith("-1-0001", numbers[0]);
+        Assert.EndsWith("-1-0002", numbers[1]);
+        Assert.EndsWith("-1-0003", numbers[2]);
     }
 
     [Fact]
