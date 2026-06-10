@@ -1,0 +1,28 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+UI/InvoiceTrackerUI/dist/
+API/InvoiceTrackerAPI2/bin/
+API/InvoiceTrackerAPI2/obj/
+API/InvoiceTrackerAPI2.Tests/bin/
+API/InvoiceTrackerAPI2.Tests/obj/
+
+# Environment secrets
+.env
+
+# macOS
+.DS_Store
+UI/.DS_Store
+
+# Logs
+*.log
+API/InvoiceTrackerAPI2/logs/
+
+# SQLite dev db
+API/InvoiceTrackerAPI2/invoicetracker.db
+
+# Terraform state
+terraform/.terraform/
+terraform/terraform.tfstate
+terraform/terraform.tfstate.backup
