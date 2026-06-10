@@ -5896,19 +5896,19 @@
     ]
   },
   "packageFolders": {
-    "/Users/candiceyeatman/.nuget/packages/": {}
+    "/Users/CandiceYeatman/.nuget/packages/": {}
   },
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "/Users/candiceyeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2.Tests/InvoiceTrackerAPI2.Tests.csproj",
+      "projectUniqueName": "/Users/CandiceYeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2.Tests/InvoiceTrackerAPI2.Tests.csproj",
       "projectName": "InvoiceTrackerAPI2.Tests",
-      "projectPath": "/Users/candiceyeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2.Tests/InvoiceTrackerAPI2.Tests.csproj",
-      "packagesPath": "/Users/candiceyeatman/.nuget/packages/",
-      "outputPath": "/Users/candiceyeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2.Tests/obj/",
+      "projectPath": "/Users/CandiceYeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2.Tests/InvoiceTrackerAPI2.Tests.csproj",
+      "packagesPath": "/Users/CandiceYeatman/.nuget/packages/",
+      "outputPath": "/Users/CandiceYeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2.Tests/obj/",
       "projectStyle": "PackageReference",
       "configFilePaths": [
-        "/Users/candiceyeatman/.nuget/NuGet/NuGet.Config"
+        "/Users/CandiceYeatman/.nuget/NuGet/NuGet.Config"
       ],
       "originalTargetFrameworks": [
         "net9.0"
@@ -5920,8 +5920,8 @@
         "net9.0": {
           "targetAlias": "net9.0",
           "projectReferences": {
-            "/Users/candiceyeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2/InvoiceTrackerAPI2.csproj": {
-              "projectPath": "/Users/candiceyeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2/InvoiceTrackerAPI2.csproj"
+            "/Users/CandiceYeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2/InvoiceTrackerAPI2.csproj": {
+              "projectPath": "/Users/CandiceYeatman/Library/Mobile Documents/com~apple~CloudDocs/PrivateGit/Tally/API/InvoiceTrackerAPI2/InvoiceTrackerAPI2.csproj"
             }
           }
         }
@@ -5995,7 +5995,7 @@
             "privateAssets": "all"
           }
         },
-        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.305/PortableRuntimeIdentifierGraph.json"
+        "runtimeIdentifierGraphPath": "/usr/local/share/dotnet/sdk/9.0.302/PortableRuntimeIdentifierGraph.json"
       }
     }
   }
