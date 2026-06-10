@@ -26,3 +26,6 @@ API/InvoiceTrackerAPI2/invoicetracker.db
 terraform/.terraform/
 terraform/terraform.tfstate
 terraform/terraform.tfstate.backup
+
+# Terraform provider binaries
+terraform/ec2/.terraform/
